@@ -5,6 +5,10 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <netinet/in.h>
+
+
+struct sockaddr_in my_addr;
 
 class Connector{
     private:
@@ -32,6 +36,16 @@ class Connector{
             return sockfd;
         }
 
+        void BindSocket(){
+            struct sockaddr_in serv_address;
+            serv_address.sin_family = AF_INET;
+            serv_address.sin_port = htons(port);
+            serv_address.sin_addr.s_addr = htonl(INADDR_ANY);
+
+            bind(sockfd, (struct sockaddr *) &serv_address, sizeof(serv_address));
+            printf("Socket bound to %d at port %d.\n", htons(INADDR_ANY), port);
+        }
+
 
        ~Connector(){
             if(sockfd >= 0){
@@ -42,9 +56,9 @@ class Connector{
 };
 
 int main(){
-    Connector NewConnection;
-    
-
-    return 0;
+    Connector newConnection;
+    int sockfd = newConnection.CreateSocketFd();
+    newConnection.BindSocket();
+    printf("The socket file descriptor is: %d.\n", sockfd);     
 }
 
