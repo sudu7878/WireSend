@@ -2,7 +2,9 @@ compile_commands.json
 .vscode/
 
 ftp
-build/
+builds/
 *.o
 
 *.temp
+
+.cache
