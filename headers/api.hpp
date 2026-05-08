@@ -1,8 +1,9 @@
+/*FileName: api.hpp*/
+
 #pragma once
 
-#ifndef CONNECTOR_MODULE_HPP
-#define CONNECTOR_MODULE_HPP
-
+#ifndef API_MODULE_HPP
+#define API_MODULE_HPP
 
 
 #include <stdbool.h>
@@ -19,12 +20,11 @@
 
 extern bool EnableDebug;
 extern volatile bool ProgramRunning;
+extern bool RunningMode;                       /*1 for server. 0 for client */
 
 void HandleExit(int sig);
 
 const char* GetLANIPAddr();
-
-void PrintServerInfo(uint16_t port);
 
 class BaseConnectionInstance{
     protected:
@@ -38,24 +38,8 @@ class BaseConnectionInstance{
 
 };
 
-class ServerInstance : public BaseConnectionInstance{
-    private:
-        uint16_t serv_port = 8000;
-    public:
-        int GetPort();
-        void StartListening();
-        void BindSocketToServer();
-        int AcceptClient();
-};
-
-class ClientInstance : public BaseConnectionInstance{
-    private:
-        uint16_t serv_port;
-    public:
-        void ConnectToServer(const char* ip, uint16_t port);
-        int GetPort();
-};
+void PrintServerInfo(uint16_t port);
 
 void TerminateConnection(BaseConnectionInstance& ConnectionInstance);
 
-#endif  /*CONNECTOR_MODULE_HPP*/
+#endif  /*API_HPP*/
