@@ -2,7 +2,7 @@ This is a custom FTP project that right now only supports chatting (still workin
 
 then:
   ./ftp server
-  Starts a server.
+  Starts a server. For the client, run: 
   ./ftp {ipaddr from the server} {port>}
 
 To debug, you can add "-dbg" to enable debugging mode.
