@@ -17,19 +17,3 @@ What am i doing and how i plan on making it:
     i take input as the packet struct so that it knows what it is working on (by working with the variables provided by the struct), essentially knowin the blueprint of the arrangement. We start with the blank buffer and we then append the array with the contents of the packet as designed by our protocol. We also calculate the size of the payload, which is just a string, and we get the value by that. This LEN attribute will help our decoder to kno0w the size of our message string (or payload) We will be using big endiannes for this shit.
 
     Once the byte order is ready we then simply push it to the send() function to send it over the socket.
-
-
-makefile todo:
-
-#Makefile ver0.0.1
-
-BUILD = builds/TestBuilds
-
-all:
-    g++ -Iheaders src/CommunMod.cpp src/api.cpp src/ClientMod.cpp src/ServerMod.cpp src/UserHandler.cpp -L. path/to/lib.so -o ftp
-
-
-
-
-
-
