@@ -154,6 +154,26 @@ static void *server_send_thread(void *arg) {
             stdo("Server stopped.\n");
             halt(0);
         }
+        if (strcomp(line, "!kick") == 1) {
+            pthread_mutex_lock(&g_mu);
+            int fd = g_connfd;
+            pthread_mutex_unlock(&g_mu);
+            if (fd == -1) {
+                stdo("[INFO] No client connected.\n");
+            } else {
+                send_packet(fd, TYPE_BROADCAST, CTL_END, "You have been kicked by the server.\n");
+                sleep(1);
+                shutdown(fd, SHUT_RDWR);
+                close(fd);
+                pthread_mutex_lock(&g_mu);
+                g_connfd = -1;
+                g_done = 1;
+                pthread_cond_signal(&g_cv);
+                pthread_mutex_unlock(&g_mu);
+                stdo("[ACTION] Client kicked.\n");
+            }
+            continue;
+        }
         if (line[0] == '\0') {
             continue;
         }
@@ -189,7 +209,7 @@ static int run_server(void) {
         lan_ip(),
         ":",
         tostrint(PORT),
-        "\n===========================\n"
+        "\n===========================\n\n"
     ));
     pthread_t stid;
     pthread_create(&stid, NULL, server_send_thread, NULL);
