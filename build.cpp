@@ -1,6 +1,6 @@
 #include "NimLib.hpp"
 
 int main(void) {
-    exec("g++ -Iheaders src/*.cpp -o ftp");
+    exec("g++ src/main.cpp -o ftp");
     return 0;
 }
