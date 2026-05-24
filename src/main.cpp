@@ -8,7 +8,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "../nimlib.cpp"
+#include "nimlib.cpp"
 
 #define PORT 8000
 #define MAX_BODY 4096
@@ -24,10 +24,18 @@ static pthread_cond_t g_cv = PTHREAD_COND_INITIALIZER;
 static int g_connfd = -1;
 static int g_done = 0;
 
-struct Packet { uint8_t type; uint32_t len; char body[MAX_BODY]; uint8_t ctl; };
+
+struct Packet {
+    uint8_t type;
+    uint32_t len;
+    char body[MAX_BODY];
+    uint8_t ctl;
+};
 
 static int send_packet(int fd, uint8_t type, uint8_t ctl, const char *body) {
-    if (fd < 0) { return 0; }
+    if (fd < 0) {
+        return 0;
+    }
     uint8_t buf[HDR_SIZE + MAX_BODY + 1];
     uint32_t blen = (uint32_t)strlen(body);
     uint32_t nl = htonl(blen);
@@ -41,15 +49,29 @@ static int send_packet(int fd, uint8_t type, uint8_t ctl, const char *body) {
 static int recv_packet(int fd, struct Packet *p) {
     uint8_t hdr[HDR_SIZE];
     int n = 0;
-    while (n < HDR_SIZE) { int r = recv(fd, hdr + n, HDR_SIZE - n, 0); if (r <= 0) { return -1; } n += r; }
+    while (n < HDR_SIZE) {
+        int r = recv(fd, hdr + n, HDR_SIZE - n, 0);
+        if (r <= 0) {
+            return -1;
+        }
+        n += r;
+    }
     uint32_t nlen;
     memcpy(&nlen, hdr + 1, 4);
     uint32_t blen = ntohl(nlen);
-    if (blen >= MAX_BODY) { blen = MAX_BODY - 1; }
+    if (blen >= MAX_BODY) {
+        blen = MAX_BODY - 1;
+    }
     uint32_t need = blen + 1;
     uint8_t  tmp[MAX_BODY + 1];
     n = 0;
-    while (n < (int)need) { int r = recv(fd, tmp + n, need - n, 0); if (r <= 0) { return -1; } n += r; }
+    while (n < (int)need) {
+        int r = recv(fd, tmp + n, need - n, 0);
+        if (r <= 0) {
+            return -1;
+        }
+        n += r;
+    }
     p->type = hdr[0];
     p->len  = blen;
     memcpy(p->body, tmp, blen);
@@ -68,12 +90,19 @@ static int make_socket(void) {
 static const char *lan_ip(void) {
     static char ip[INET_ADDRSTRLEN];
     struct ifaddrs *ifa, *cur;
-    if (getifaddrs(&ifa) != 0) { return "?.?.?.?"; }
+    if (getifaddrs(&ifa) != 0) {
+        return "?.?.?.?";
+    }
     for (cur = ifa; cur; cur = cur->ifa_next) {
-        if (!cur->ifa_addr || cur->ifa_addr->sa_family != AF_INET) { continue; }
+        if (!cur->ifa_addr || cur->ifa_addr->sa_family != AF_INET) {
+            continue;
+        }
         struct sockaddr_in *sin = (struct sockaddr_in *)cur->ifa_addr;
         inet_ntop(AF_INET, &sin->sin_addr, ip, sizeof(ip));
-        if (strncmp(ip, "127.", 4) != 0) { freeifaddrs(ifa); return ip; }
+        if (strncmp(ip, "127.", 4) != 0) {
+            freeifaddrs(ifa);
+            return ip;
+        }
     }
     freeifaddrs(ifa);
     return "127.0.0.1";
@@ -86,10 +115,19 @@ static void *server_recv_thread(void *arg) {
         pthread_mutex_lock(&g_mu);
         int fd = g_connfd;
         pthread_mutex_unlock(&g_mu);
-        if (recv_packet(fd, &p) < 0) { stdo("[INFO] Client disconnected.\n"); break; }
-        if (p.type == TYPE_BROADCAST) { stdo(strformat(2, "[BROADCAST] ", p.body)); }
-        else { stdo(strformat(3, "[CLIENT] ", p.body, "\n")); }
-        if (p.ctl == CTL_END) { stdo("[ACTION] CLIENT LEFT.\n"); break; }
+        if (recv_packet(fd, &p) < 0) {
+            stdo("[INFO] Client disconnected.\n");
+            break;
+        }
+        if (p.type == TYPE_BROADCAST) {
+            stdo(strformat(2, "[BROADCAST] ", p.body));
+        } else {
+            stdo(strformat(3, "[CLIENT] ", p.body, "\n"));
+        }
+        if (p.ctl == CTL_END) {
+            stdo("[ACTION] CLIENT LEFT.\n");
+            break;
+        }
     }
     pthread_mutex_lock(&g_mu);
     g_done = 1;
@@ -109,15 +147,23 @@ static void *server_send_thread(void *arg) {
             pthread_mutex_unlock(&g_mu);
             if (fd != -1) {
                 send_packet(fd, TYPE_BROADCAST, CTL_END, "Server is shutting down.\n");
-                sleep(1); shutdown(fd, SHUT_RDWR); close(fd);
+                sleep(1);
+                shutdown(fd, SHUT_RDWR);
+                close(fd);
             }
-            stdo("Server stopped.\n"); halt(0, 0);
+            stdo("Server stopped.\n");
+            halt(0);
         }
-        if (line[0] == '\0') { continue; }
+        if (line[0] == '\0') {
+            continue;
+        }
         pthread_mutex_lock(&g_mu);
         int fd = g_connfd;
         pthread_mutex_unlock(&g_mu);
-        if (fd == -1) { stdo("[INFO] No client connected, message dropped.\n"); continue; }
+        if (fd == -1) {
+            stdo("[INFO] No client connected, message dropped.\n");
+            continue;
+        }
         send_packet(fd, TYPE_MESSAGE, CTL_NONE, line);
         stdo(strformat(3, "[YOU]: ", line, "\n"));
     }
@@ -131,10 +177,19 @@ static int run_server(void) {
     addr.sin_family = AF_INET;
     addr.sin_port = htons(PORT);
     addr.sin_addr.s_addr = INADDR_ANY;
-    if (bind(srv, (struct sockaddr *)&addr, sizeof(addr)) < 0) { stdo("Error binding socket.\n"); return -1; }
+    if (bind(srv, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+        stdo("Error binding socket.\n");
+        return -1;
+    }
     listen(srv, 5);
-    stdo(strformat(7, "\n========Server Info========\nLocal: 127.0.0.1:", tostrint(PORT), "\nLAN:   ", lan_ip(),
-        ":", tostrint(PORT), "\n===========================\n\n"
+    stdo(strformat(7,
+        "\n========Server Info========\nLocal: 127.0.0.1:",
+        tostrint(PORT),
+        "\nLAN:   ",
+        lan_ip(),
+        ":",
+        tostrint(PORT),
+        "\n===========================\n"
     ));
     pthread_t stid;
     pthread_create(&stid, NULL, server_send_thread, NULL);
@@ -143,7 +198,9 @@ static int run_server(void) {
         struct sockaddr_in cli;
         socklen_t clen = sizeof(cli);
         int fd = accept(srv, (struct sockaddr *)&cli, &clen);
-        if (fd < 0) { continue; }
+        if (fd < 0) {
+            continue;
+        }
         pthread_mutex_lock(&g_mu);
         g_connfd = fd;
         g_done = 0;
@@ -154,7 +211,9 @@ static int run_server(void) {
         pthread_create(&rid, NULL, server_recv_thread, NULL);
         pthread_detach(rid);
         pthread_mutex_lock(&g_mu);
-        while (!g_done) { pthread_cond_wait(&g_cv, &g_mu); }
+        while (!g_done) {
+            pthread_cond_wait(&g_cv, &g_mu);
+        }
         shutdown(g_connfd, SHUT_RDWR);
         close(g_connfd);
         g_connfd = -1;
@@ -168,10 +227,19 @@ static void *client_recv_thread(void *arg) {
     (void)arg;
     struct Packet p;
     while (1) {
-        if (recv_packet(g_connfd, &p) < 0) { stdo("[INFO] Server disconnected.\n"); halt(0, 0); }
-        if (p.type == TYPE_BROADCAST) { stdo(strformat(2, "[BROADCAST] Server: ", p.body)); }
-        else { stdo(strformat(3, "[SERVER]: ", p.body, "\n")); }
-        if (p.ctl == CTL_END) { stdo("[INFO] Server closed the connection.\n"); halt(0, 0); }
+        if (recv_packet(g_connfd, &p) < 0) {
+            stdo("[INFO] Server disconnected.\n");
+            halt(0);
+        }
+        if (p.type == TYPE_BROADCAST) {
+            stdo(strformat(2, "[BROADCAST] Server: ", p.body));
+        } else {
+            stdo(strformat(3, "[SERVER]: ", p.body, "\n"));
+        }
+        if (p.ctl == CTL_END) {
+            stdo("[INFO] Server closed the connection.\n");
+            halt(0);
+        }
     }
     return NULL;
 }
@@ -183,9 +251,13 @@ static int run_client(const char *ip, uint16_t port) {
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_port   = htons(port);
-    if (inet_pton(AF_INET, ip, &addr.sin_addr) <= 0) { stdo("Error converting IP address.\n"); return -1; }
+    if (inet_pton(AF_INET, ip, &addr.sin_addr) <= 0) {
+        stdo("Error converting IP address.\n");
+        return -1;
+    }
     if (connect(g_connfd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-        stdo("Error connecting to server.\n"); return -1;
+        stdo("Error connecting to server.\n");
+        return -1;
     }
     stdo("Connected.\n");
     pthread_t tid;
@@ -196,10 +268,12 @@ static int run_client(const char *ip, uint16_t port) {
         if (!line) { break; }
         if (strcomp(line, "/~end~/") == 1) { send_packet(g_connfd, TYPE_MESSAGE, CTL_END, line); break; }
         if (strcomp(line, "!exit") == 1) {
-            send_packet(g_connfd, TYPE_BROADCAST, CTL_NONE, "Client is exiting.\n"); break;
+            send_packet(g_connfd, TYPE_BROADCAST, CTL_NONE, "Client is exiting.\n");
+            break;
         }
         if (line[0] != '\0') {
-            send_packet(g_connfd, TYPE_MESSAGE, CTL_NONE, line); stdo(strformat(3, "[YOU]: ", line, "\n"));
+            send_packet(g_connfd, TYPE_MESSAGE, CTL_NONE, line);
+            stdo(strformat(3, "[YOU]: ", line, "\n"));
         }
     }
     shutdown(g_connfd, SHUT_RDWR);
@@ -209,10 +283,18 @@ static int run_client(const char *ip, uint16_t port) {
 
 int main() {
     Getargs args = getargs();
-    if (args.length < 1) { stdo("Usage: ./ftp server | ./ftp client <ip> <port>\n"); return 1; }
-    if (strcomp(args.args[0], "server") == 1) { return run_server(); }
+    if (args.length < 1) {
+        stdo("Usage: ./ftp server | ./ftp client <ip> <port>\n");
+        return 1;
+    }
+    if (strcomp(args.args[0], "server") == 1) {
+        return run_server();
+    }
     if (strcomp(args.args[0], "client") == 1) {
-        if (args.length < 3) { stdo("Usage: ./ftp client <ip> <port>\n"); return 1; }
+        if (args.length < 3) {
+            stdo("Usage: ./ftp client <ip> <port>\n");
+            return 1;
+        }
         return run_client(args.args[1], (uint16_t)tointstr(args.args[2]));
     }
     stdo("Usage: ./ftp server | ./ftp client <ip> <port>\n");
