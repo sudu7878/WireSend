@@ -75,7 +75,7 @@ extern "C" {
     const char* getdef     (const char* name);
     const char* getprogloc (void);
     Getermsize  getermsize (void);
-    void        halt       (long exit_code);
+    void        halt       (long atexit, long exit_code);
     long        has        (const char* text, const char* pattern);
     long        isdef      (const char* name);
     long        isfile     (const char* path);
