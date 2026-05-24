@@ -2,7 +2,8 @@
 
 #include "ServerMod.hpp"
 #include "CommunMod.hpp"
-
+#include "UserHandler.hpp"
+#include "api.hpp"
 
 #include <cstdint>
 #include <cstring>
@@ -14,8 +15,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <vector>
-#include "UserHandler.hpp"
-#include "api.hpp"
+
 #include <iostream>
 
 #include <thread>
