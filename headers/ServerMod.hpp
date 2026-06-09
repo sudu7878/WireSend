@@ -18,4 +18,8 @@ class ServerInstance : public BaseConnectionInstance{
         int AcceptClient();
 };
 
+void StopServer(ServerInstance& server);
+
+void LockDoor(ServerInstance& server);
+
 #endif  /*SERVER_MOD_HPP*/
