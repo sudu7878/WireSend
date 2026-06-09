@@ -89,14 +89,11 @@ void BroadcastServerMsg(const std::string& message){
     
     std::vector<uint8_t> BroadcastBuffer = SerializePacket(BroadcastPacket);
 
-    int SendFlag = send(CommunicationSocketFd, 
-                        BroadcastBuffer.data(), 
-                        BroadcastBuffer.size(), 
-                        0);
+    int SendFlag = SendPacket(BroadcastBuffer, CommunicationSocketFd);
 
     if (SendFlag < 0){
-        perror("[CRITICAL ERROR] Could not write into server message buffer");
-            if(EnableDebug){printf("[dbg] Broadcast FAIL. Server send flag: %d\n", SendFlag);}
+        perror("[CRITICAL SERVER ERROR] Could not write into server message buffer");
+            if(EnableDebug){printf("[dbg] Broadcast FAIL.\n");}
     };
         if(EnableDebug){printf("[dbg] Broadcast successful.\n");}
 }
@@ -230,21 +227,18 @@ int StartServer(){
             /*SENDING PACKET LOGIC*/
           
            std::vector<uint8_t> MessageBuffer = SerializePacket(MessagePacket);
-                if(EnableDebug){printf("[dbg] Made the packet ready for sending... calling send() now.\n");}
+                //if(EnableDebug){printf("[dbg] Made the packet ready for sending... calling send() now.\n");}
 
-           int SendFlag = send(CommunicationSocketFd, 
-                                MessageBuffer.data(), 
-                                MessageBuffer.size(), 
-                                0);
+
+            int SendFlag =  SendPacket(MessageBuffer, CommunicationSocketFd);
             
-            if(EnableDebug){printf("[dbg] Packet shud be sent.\n");}
+            if(SendFlag == 0){
+                    if(EnableDebug){printf("[dbg] Packet sending successful.\n");}
+            } else if (SendFlag < 0){
+                    break;
+            }
 
             printf("[YOU]: %s\n", MessagePacket.PL_BODY.c_str());
-
-           if (SendFlag < 0){
-                if(EnableDebug){printf("[dbg] Sending buffer failed. Sendflag returned: %d\n", SendFlag);}
-            perror("[ERROR] Sending packet failed");
-           };
            
         }
 

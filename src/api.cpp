@@ -14,9 +14,11 @@
 #include <netdb.h>
 #include <cstdlib>
 #include <ifaddrs.h>
+#include <vector>
 
 
 #include "api.hpp"
+#include "CommunMod.hpp"
 
 bool EnableDebug = false;
 bool RunningMode;
@@ -118,5 +120,21 @@ int RecievePacket(std::vector<uint8_t> &buffer, int fd){
     return 0;
 };
 
+int SendPacket(std::vector<uint8_t> &msgbuff, int fd){
+    size_t SentBytes = 0;
 
+    while(SentBytes < msgbuff.size()){
+        int SendFlag = send(fd, 
+                        msgbuff.data() + SentBytes, 
+                          msgbuff.size() - SentBytes, 
+                      0);
 
+    if (SendFlag <= 0){
+            if(EnableDebug){printf("Sending buffer failed.\n");}
+        perror("[ERROR] Packet send error");
+        return -1;
+    } 
+        SentBytes += SendFlag;
+    }
+    return 0;
+};

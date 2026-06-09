@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <cstdint>
 #ifndef API_MODULE_HPP
 #define API_MODULE_HPP
 
@@ -43,5 +44,7 @@ void PrintServerInfo(uint16_t port);
 void TerminateConnection(BaseConnectionInstance& ConnectionInstance);
 
 int RecievePacket(std::vector<uint8_t> &buffer, int fd);
+
+int SendPacket(std::vector<uint8_t> &msgbuff, int fd);
 
 #endif  /*API_HPP*/

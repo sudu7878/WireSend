@@ -185,21 +185,16 @@ int StartClient(const char* ip, uint16_t port){
         std::vector<uint8_t> MessageBuffer = SerializePacket(MessagePacket);
             //if(EnableDebug){printf("[dbg] Made the packet ready for sending... calling send() now.\n");}
 
-        int SendFlag = send(NewClient.GetFd(), 
-                        MessageBuffer.data(), 
-                        MessageBuffer.size(), 
-                        0);
+        int SendFlag = SendPacket(MessageBuffer, NewClient.GetFd());
         
-        if(EnableDebug){printf("[dbg] Packet should be sent.\n");}        
-        
-        printf("[YOU]: %s\n", MessagePacket.PL_BODY.c_str());
-
-        if (SendFlag < 0){
-                if(EnableDebug){printf("[dbg] Sending buffer failed. Sendflag returned: %d\n", SendFlag);}
-            perror("[ERROR] Packet send error");
+        if(SendFlag == 0){
+                if(EnableDebug){printf("The packet send was successful.\n");}
+        } else if (SendFlag < 0){
             printf("Sending packet failed. Terminating the cinnection\n");
             break;
         };
+        
+        printf("[YOU]: %s\n", MessagePacket.PL_BODY.c_str());
            
     }
 
@@ -207,3 +202,5 @@ int StartClient(const char* ip, uint16_t port){
 
     return 0;
 }
+
+
