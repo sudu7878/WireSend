@@ -76,38 +76,21 @@ int RunRecvThread(ClientInstance& client){
         std::vector<uint8_t> RecvMsgHdrBuff(5);
         TemporaryPacketHeader HeaderPacket;
 
-        /*to recieve header packet*/
-        int RecvBytes = 0;
-        while (RecvBytes < RecvMsgHdrBuff.size()) {
-            /*handling pointer arithmetic to prevent over-writing*/
-            int RecvFlag = recv(client.GetFd(), 
-                                RecvMsgHdrBuff.data() + RecvBytes,
-                                RecvMsgHdrBuff.size() - RecvBytes, 
-                                0);
-
-            if(RecvFlag < 0){
-                    if(EnableDebug){printf("[dbg] Reading incoming buffer failed. Recvflag returned: %d\n", RecvFlag);}
-                perror("[ERROR] Receiving packet failed");
-                printf("Terminating connection.\n");
-                TerminateConnection(client);
-                ProgramRunning = false;
-                return -1;
-            } else if (RecvFlag == 0){
-                    if(EnableDebug){printf("[dbg] Recieve flag returned %d. Closing connection.\n", RecvFlag);}
-                CloseConnection(client);
-                ProgramRunning = false;
-                ClientConnected = false;
-                return 0;
-                break;
-            } 
-            
-            else {
-                RecvBytes += RecvFlag;
-            }
+        int RecieveStatusHdr = RecievePacket(RecvMsgHdrBuff, client.GetFd());
+        if (RecieveStatusHdr == 2){
+            if(EnableDebug){printf("[dbg] Closing connection.\n");}
+            CloseConnection(client);
+            ProgramRunning = false;
+            ClientConnected = false;
+            break;
+        } else if(RecieveStatusHdr < 0){
+            printf("Terminating connection.\n");
+            TerminateConnection(client);
+            ProgramRunning = false;
+            break;
         }
         
         /*to recieve body packet based on header packet attributes*/
-        RecvBytes = 0; /*reset*/
         HeaderPacket = DeserializeHeaderPacket(RecvMsgHdrBuff);
 
         TemporaryPacketBody BodyPacket;
@@ -116,31 +99,20 @@ int RunRecvThread(ClientInstance& client){
 
         std::vector<uint8_t> RecvMsgBodyBuff(BytesToRecieve);
 
-        while (RecvBytes < BytesToRecieve) {
-            int RecvFlag = recv(client.GetFd(), 
-                                RecvMsgBodyBuff.data() + RecvBytes, 
-                                BytesToRecieve - RecvBytes, 
-                                0);
-
-            if(RecvFlag < 0){
-                    if(EnableDebug){printf("[dbg] Reading incoming buffer failed. Recvflag returned: %d\n", RecvFlag);}
-                perror("[ERROR] Receiving packet failed");
-                printf("Terminating connection. Recv fd: %d\n", RecvFlag);
-                TerminateConnection(client);
-                ClientConnected = false;
-                return -1;
-            } else if(RecvFlag == 0){
-                    if(EnableDebug){printf("Recieved command to close the connection.\n");}
-                CloseConnection(client);
-                TerminateConnection(client);
-                ClientConnected = false;
-                ProgramRunning = false;
-                return 0;
-            }else{
-                RecvBytes += RecvFlag;
-            }
+        int RecieveStatusBdy = RecievePacket(RecvMsgBodyBuff, client.GetFd());
+        if (RecieveStatusBdy == 2){
+            if(EnableDebug){printf("[dbg] Closing connection.\n");}
+            CloseConnection(client);
+            ProgramRunning = false;
+            ClientConnected = false;
+            break;
+        } else if(RecieveStatusBdy < 0){
+            printf("Terminating connection.\n");
+            TerminateConnection(client);
+            ProgramRunning = false;
+            break;
         }
-        RecvBytes = 0;
+
         BodyPacket = DeserializeBodyPacket(RecvMsgBodyBuff, HeaderPacket);
 
         /*Combining the header + body packet to form message packet*/

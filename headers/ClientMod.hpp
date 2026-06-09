@@ -18,4 +18,9 @@ class ClientInstance : public BaseConnectionInstance{
         int GetPort();
 };
 
+void TerminateConnection(ClientInstance& client);
+
+void CloseConnection(ClientInstance& client);
+
+
 #endif  /*CLIENT_MOD_HPP*/

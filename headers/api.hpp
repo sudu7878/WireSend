@@ -5,6 +5,7 @@
 #ifndef API_MODULE_HPP
 #define API_MODULE_HPP
 
+#include "CommunMod.hpp"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -40,5 +41,7 @@ class BaseConnectionInstance{
 void PrintServerInfo(uint16_t port);
 
 void TerminateConnection(BaseConnectionInstance& ConnectionInstance);
+
+int RecievePacket(std::vector<uint8_t> &buffer, int fd);
 
 #endif  /*API_HPP*/

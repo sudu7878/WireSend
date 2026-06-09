@@ -91,5 +91,31 @@ BaseConnectionInstance::~BaseConnectionInstance() noexcept{
     close(sockfd);
 }
 
+int RecievePacket(std::vector<uint8_t> &buffer, int fd){
+    int RecvBytes = 0;
+    while (RecvBytes < buffer.size()) {
+        /*handling pointer arithmetic to prevent over-writing*/
+        int RecvFlag = recv(fd, 
+                        buffer.data() + RecvBytes,
+                          buffer.size() - RecvBytes, 
+                      0);
+
+        if(RecvFlag < 0){
+            if(EnableDebug){printf("[dbg] Reading incoming buffer failed. Recvflag returned: %d\n", RecvFlag);}
+            perror("[ERROR] Receiving packet failed");
+
+            return -1;
+
+        } else if (RecvFlag == 0){
+            if(EnableDebug){printf("[dbg] Recieve flag returned %d.", RecvFlag);}
+            return 2;
+        } 
+        else {
+            RecvBytes += RecvFlag;
+            }
+        }
+    return 0;
+};
+
 
 
