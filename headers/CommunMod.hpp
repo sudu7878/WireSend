@@ -55,24 +55,24 @@ struct TemporaryPacketBody{
 
 
 enum PacketType{
-    MESSAGE = 100,
-    MESSAGE_BROADCAST = 002,
+    MESSAGE = 0,
+    MESSAGE_BROADCAST = 1,
 
-    FILE_TRANSFER = 200,
-    FILE_BEGIN = 003,
-    FILE_CHUNK = 004,
-    FILE_END = 005
+    FILE_TRANSFER = 2,
+    FILE_BEGIN = 3,
+    FILE_CHUNK = 4,
+    FILE_END = 5
 };
 
 enum Flags{
-    FILE_SUCC = 006,
-    FILE_FAIL = 007,
-    CANCEL_TRANS = 012
+    FILE_SUCC = 6,
+    FILE_FAIL = 7,
+    CANCEL_TRANS = 8
 };
 
 enum ControlType{
-    NO_ARG = 000,
-    END_CONNECTION = 010
+    NO_ARG = 9,
+    END_CONNECTION = 10
 };
 
 /*Never forget to tell this function which endiannes to use or the world is over.*/

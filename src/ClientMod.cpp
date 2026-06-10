@@ -122,26 +122,27 @@ int RunRecvThread(ClientInstance& client){
 
     /*PACKET PASRSING LOGIC*/
 
-        //CONVERT BINARY TO ASCII
-        std::string ReceivedText(MessagePacket.PL_BODY.begin(), MessagePacket.PL_BODY.end());
+        if(MessagePacket.PL_TYPE == MESSAGE || MessagePacket.PL_TYPE == MESSAGE_BROADCAST){
+            //CONVERT BINARY TO ASCII
+            std::string ReceivedText(MessagePacket.PL_BODY.begin(), MessagePacket.PL_BODY.end());
 
-        if (MessagePacket.PL_TYPE == MESSAGE_BROADCAST){
-            printf("[BROADCAST] Server: %s", ReceivedText.c_str());
+            if (MessagePacket.PL_TYPE == MESSAGE_BROADCAST){
+                printf("[BROADCAST] Server: %s", ReceivedText.c_str());
+            }
+            
+            printf("[SERVER]: %s\n", ReceivedText.c_str());
+
         }
-
-        switch (MessagePacket.PL_CTL) {
-            case NO_ARG:
-                break;
-            case END_CONNECTION:
-                TerminateConnection(client);
-                ClientConnected = false;
-                break;
+         switch (MessagePacket.PL_CTL) {
+                case NO_ARG:
+                    break;
+                case END_CONNECTION:
+                    TerminateConnection(client);
+                    ClientConnected = false;
+                    break;
+        
         }
-
-        
-        
-        printf("[SERVER]: %s\n", ReceivedText.c_str());
-        
+        //TODO: add support for the file receving stuff by MessagePacket.PL_TYPE = FILE_TRANSFER
     }   
     return 0;
 }

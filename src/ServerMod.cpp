@@ -151,14 +151,16 @@ int RunRecvThread(ServerInstance& server){
     
         MessagePacket = CombinePacket(HeaderPacket, BodyPacket);
 
-        //CONVERT BINARY TO ASCII
-        std::string ReceivedText(MessagePacket.PL_BODY.begin(), MessagePacket.PL_BODY.end());
+        if (MessagePacket.PL_TYPE == MESSAGE){
+            //CONVERT BINARY TO ASCII
+            std::string ReceivedText(MessagePacket.PL_BODY.begin(), MessagePacket.PL_BODY.end());
 
-        printf("[CLIENT]: %s\n", ReceivedText.c_str());
+            printf("[CLIENT]: %s\n", ReceivedText.c_str());
 
-        /*PARSING LOGIC*/
-        if (MessagePacket.PL_TYPE == MESSAGE_BROADCAST){
-            printf("[BROADCAST] Server: %s", ReceivedText.c_str());
+            /*PARSING LOGIC*/
+            if (MessagePacket.PL_TYPE == MESSAGE_BROADCAST){
+                printf("[BROADCAST] Server: %s", ReceivedText.c_str());
+            }
         }
 
         switch (MessagePacket.PL_CTL) {
