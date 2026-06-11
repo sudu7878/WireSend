@@ -16,6 +16,9 @@
 int main(int argc, char *argv[]){
     if(argc < 2){
         printf("Needs arguments.\n");
+        printf("Usage for client: ./wires client <ip> <port>\n");
+        printf("Usage for server: ./wires server\n");
+        printf("Add a -dbg tag to enable debugging.\n");
         return -1;
     }
 
@@ -28,18 +31,21 @@ int main(int argc, char *argv[]){
 
     if(strcmp(argv[1], "server") == 0){
         RunningMode = true;
-        printf("Program running in server mode.\n");
+        printf("WireSend running in server mode.\n");
 
     } else if(strcmp(argv[1], "client") == 0){
         RunningMode = false;
         if(argc < 4){
-            printf("Usage: ./program client <ip> <port>\n");
+            printf("Usage: ./wires client <ip> <port>\n");
             return -1;
         }
-        printf("Program running in client mode.\n");
+        printf("WireSend running in client mode.\n");
 
     } else {
         printf("Invalid arguments.\n");
+        printf("Usage for client: ./wires client <ip> <port>\n");
+        printf("Usage for server: ./wires server\n");
+        printf("Add a -dbg tag to enable debugging.\n");
         return -1;
     }
     

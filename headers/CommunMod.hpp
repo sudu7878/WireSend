@@ -22,19 +22,6 @@
 
 #include <ifaddrs.h>
 
-/*Packet struct format:
-    PL_TYPE:
-        000 -> Messaging
-        100 -> File     --TODO: Add support this later
-        101 -> MessageBroadcast (note: only for server)
-
-    PL_CTL:
-        000 -> Nothing
-        111 -> Tells peer to listen for more. (Client/Server in speaking mode)
-        100 -> Tells peer to speak. (Client/Server in listening mode)
-        010 -> Tells peer to end connection.
-*/
-
 /*this is the packet to send*/
 struct Packet{
     uint8_t PL_TYPE;                    /*1 BYTE*/
