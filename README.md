@@ -1,6 +1,6 @@
 <h1>WireSend</h1>
 
-> ⚠️ **Work in progress** — currently has a lot of known bugs. Chat support is fairly functional; more features coming soon.
+> ⚠️ **Work in progress** — may contain bugs. Chat support is functional; more features coming soon.
 
 A FTP project that currently only supports **chatting**. Additional FTP functionality is still in development.
 
