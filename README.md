@@ -8,6 +8,14 @@ This software uses NimLib, Copyright (c) 2026 ArtikLamartik.
 Licensed under NLL-2.0.0: https://github.com/ArtikLamartik/NimLib/blob/main/LICENSE
 
 ---
+## Architecture
+WireSend has an asynchronous messaging protocol that supports serializing/deserializing techniques to send data efficiently over the wire. Have a look below!
+
+![WireSend architecture] (mess/arch.png)
+
+Here's a precise protocol design for messaging (note: we convert UTF-8 into binary before sending).
+
+![WireSend messaging protocol design] (mess/ProtocolVer0.1.1.jpg)
 
 ## Building
 
