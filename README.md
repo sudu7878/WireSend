@@ -17,6 +17,8 @@ Here's a precise protocol design for messaging (note: we convert UTF-8 into bina
 
 <img src = "mess/ProtocolVer0.1.1.jpg" alt="WireSend packet design"> 
 
+---
+
 ## Building
 
 Just run the makefile.
