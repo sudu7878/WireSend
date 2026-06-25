@@ -39,7 +39,7 @@ void ServerInstance::StartListening(){
     }
 }
 
-void ServerInstance::BindSocketToServer(){
+bool ServerInstance::BindSocketToServer(){
     struct sockaddr_in serv_address{};
     serv_address.sin_family = AF_INET;
     serv_address.sin_port = htons(serv_port);
@@ -50,9 +50,10 @@ void ServerInstance::BindSocketToServer(){
 
     if (bind(sockfd, (struct sockaddr *) &serv_address, sizeof(serv_address)) < 0){
         perror("[ERROR] Binding Error");
-        return;
+        return false;
     }
         if(EnableDebug){ printf("[dbg] Socket bound to port %d.\n", serv_port);}
+    return true;
 }
 
 int ClientCount = 0;
@@ -197,9 +198,15 @@ int StartServer(){
     ServerInstance NewServer;
         NewServer.CreateSocketFd();
             if(EnableDebug){printf("[dbg] Server socket creation successful. Socket FD: %d\n", NewServer.GetFd());}
-        NewServer.BindSocketToServer();
-            if(EnableDebug){printf("[dbg] Binding socekt to address successful.\n");}
-       
+        bool BindFlag = NewServer.BindSocketToServer();
+
+        //necessary err check
+        if(BindFlag == false){
+                if(EnableDebug){printf("[dbg] Binding socekt to address FAILED.\n");}
+            StopServer(NewServer);
+            ProgramRunning = false;
+            return -1; 
+        }
         
         if(ClientCount < 1){
             NewServer.StartListening();

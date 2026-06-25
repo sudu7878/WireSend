@@ -14,7 +14,7 @@ class ServerInstance : public BaseConnectionInstance{
     public:
         int GetPort();
         void StartListening();
-        void BindSocketToServer();
+        bool BindSocketToServer();
         int AcceptClient();
 };
 
