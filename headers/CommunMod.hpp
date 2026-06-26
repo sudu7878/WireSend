@@ -18,9 +18,9 @@
 #include <netdb.h>
 #include <string>
 #include <vector>
-
-
 #include <ifaddrs.h>
+
+#include "FileHandler.hpp"
 
 /*this is the packet to send*/
 struct Packet{
@@ -46,31 +46,42 @@ enum PacketType{
     MESSAGE_BROADCAST = 1,
 
     FILE_TRANSFER = 2,
-    FILE_BEGIN = 3,
-    FILE_CHUNK = 4,
-    FILE_END = 5
+    FILE_NEG = 3,
+    FILE_BEGIN = 4,
+    FILE_CHUNK = 5,
+    FILE_END = 6
 };
 
 enum Flags{
-    FILE_SUCC = 6,
-    FILE_FAIL = 7,
-    CANCEL_TRANS = 8
+    FILE_SUCC = 7,
+    FILE_FAIL = 8,
+    CANCEL_TRANS = 9
 };
 
 enum ControlType{
-    NO_ARG = 9,
-    END_CONNECTION = 10
+    NO_ARG = 10,
+    FILE_ACCEPT = 11,
+    FILE_REJECT = 12,
+    END_CONNECTION = 13
 };
 
 /*Never forget to tell this function which endiannes to use or the world is over.*/
 template<typename idk>
 void WritePacketBuffer(std::vector<uint8_t>& buff, const idk& value); 
 
+/*For normal packets*/
+    /*Serialize*/
 std::vector<uint8_t> SerializePacket(Packet &data);   
-
+    /*deserialize*/
 TemporaryPacketHeader DeserializeHeaderPacket(const std::vector<uint8_t> &hdrbuff);
 TemporaryPacketBody DeserializeBodyPacket(const std::vector<uint8_t> &buff, TemporaryPacketHeader &hdr);
 Packet CombinePacket(TemporaryPacketHeader &hdr, TemporaryPacketBody &body);
+
+/*For file metadata packets*/
+    /*serialize*/
+std::vector<uint8_t> SerializeFileMetadataPacket(const FileMetadata &meta);
+    /*deserialize*/
+FileMetadata DeserializeFileMetadataPacket(std::vector<uint8_t> &buff);
 
 #pragma pack(pop)
 #endif  /*COMMINCATION_MODULE*/

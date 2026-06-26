@@ -24,7 +24,7 @@ int main(int argc, char *argv[]){
 
     for(int i = 1; i < argc; i++){
         if(strcmp(argv[i], "-dbg") == 0){
-            EnableDebug = true;
+            EnableDebug = true; //enables debugging msgs
             printf("===DEBUG MODE ON: You may see overwhelming info===\n");
         }
     }

@@ -2,9 +2,11 @@
 
 #include "ServerMod.hpp"
 #include "CommunMod.hpp"
+#include "FileHandler.hpp"
 #include "UserHandler.hpp"
 #include "api.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <functional>
@@ -25,6 +27,8 @@
 
 int CommunicationSocketFd = 0;
 bool ServerConnected = false;
+PendingFileRequest IncomingFileRequest;
+
 
 int ServerInstance::GetPort(){
     return serv_port;
@@ -127,7 +131,11 @@ int RunRecvThread(ServerInstance& server){
 
         
         HeaderPacket = DeserializeHeaderPacket(RecvMsgHdrBuff);
-        //if(EnableDebug){printf("[dbg] Header Type: %d | Header Len: %u\n", HeaderPacket.type, HeaderPacket.len);}
+            if(EnableDebug){printf("[dbg] Header Type: %d | Header Len: %u\n", HeaderPacket.type, HeaderPacket.len);}
+
+        if(HeaderPacket.type == FILE_NEG && EnableDebug && ActiveFileNegReq){
+            printf("[dbg] A file transfer negotiation request detected.\n");
+        }
 
         TemporaryPacketBody BodyPacket;
         
@@ -162,6 +170,21 @@ int RunRecvThread(ServerInstance& server){
             if (MessagePacket.PL_TYPE == MESSAGE_BROADCAST){
                 printf("[BROADCAST] Server: %s", ReceivedText.c_str());
             }
+
+        /*for the case where we are the " first time listeners" and are expected to ANSWER the peer.*/
+        } else if (MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_CTL == NO_ARG && !ActiveFileNegReq){
+            FileMetadata metadata = DeserializeFileMetadataPacket(MessagePacket.PL_BODY);
+            IncomingFileRequest.active = true;
+            IncomingFileRequest.metadata = metadata;
+            PrintIncomingFileInfo(metadata.FileSize, metadata.FileName);
+        
+        /*for the case where we are the "askers" and we expect a RESPONSE from the peer.*/
+
+        } else if (MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_CTL == FILE_ACCEPT && ActiveFileNegReq == true){
+            printf("YAY USER ACCEPTED THE FILE!! TRANSFER WILL BEGIN HERE.\n");
+            //TODO: implement the actual file transfer.
+        } else if (MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_CTL == FILE_REJECT && ActiveFileNegReq == true){
+            printf("[INFO] The peer rejected to receive file(s).\n");
         }
 
         switch (MessagePacket.PL_CTL) {
@@ -170,6 +193,13 @@ int RunRecvThread(ServerInstance& server){
             case END_CONNECTION:
                 printf("[ACTION] CLIENT LEFT.\n");
                 break;
+            case CANCEL_TRANS:
+                if(MessagePacket.PL_TYPE == FILE_NEG){
+                    IncomingFileRequest.active = false;
+                    printf("[INFO] Sorry, file transfer request was cancelled by the sender.\n");
+                }
+                
+                //TODO: add a deleting the half-transferred filed logic here (add a file-transfer detection logic 1st)
         }
     }   
     return 0;
@@ -238,7 +268,27 @@ int StartServer(){
             if(InputText== "/~STOP~/"){
                 StopServer(NewServer);
                 if(EnableDebug){printf("[dbg] Recieved string to stop the server.\n");}
-            }
+
+            /*if user wants to accept file (note that recv thread shud set IncomingFileRequest.active = true)*/
+            } else if (InputText == "/accept"){
+               if(IncomingFileRequest.active == true){
+                    if(EnableDebug){printf("[dbg] User accepts the file.\n");}
+                AnswerSender(CommunicationSocketFd, true);
+               } else {
+                printf("[INFO] There are no pending file transfer requets to accept.\n");
+               }
+               continue;
+
+            /*if user wants to reject file (note that recv thread shud set IncomingFileRequest.active = true)*/
+            } else if (InputText == "/reject"){
+               if(IncomingFileRequest.active == true){
+                    if(EnableDebug){printf("[dbg] User rejects the file.\n");}
+                AnswerSender(CommunicationSocketFd, false);
+               } else {
+                printf("[INFO] There are no pending file transfer requets to reject.\n");
+               }
+               continue;
+            } 
 
             /*SENDING PACKET LOGIC*/
           
