@@ -21,10 +21,16 @@
 
 #include <ifaddrs.h>
 
+constexpr auto CMD_STOP = "/~STOP~/";
+constexpr auto CMD_FILEPROMPT = "/~FILE~/";
+constexpr auto CMD_ACCEPT = "/accept";
+constexpr auto CMD_REJECT = "/reject";
+
 extern bool EnableDebug;
 extern volatile bool ProgramRunning;
 extern bool RunningMode;                       /*1 for server. 0 for client */
 extern bool ActiveFileNegReq;
+extern bool FileTransferMode;
 
 void HandleExit(int sig);
 

@@ -5,6 +5,7 @@
 #include "FileHandler.hpp"
 #include "UserHandler.hpp"
 #include "api.hpp"
+#include "tinyfiledialogs.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -270,7 +271,7 @@ int StartServer(){
                 if(EnableDebug){printf("[dbg] Recieved string to stop the server.\n");}
 
             /*if user wants to accept file (note that recv thread shud set IncomingFileRequest.active = true)*/
-            } else if (InputText == "/accept"){
+            } else if (InputText == CMD_ACCEPT){
                if(IncomingFileRequest.active == true){
                     if(EnableDebug){printf("[dbg] User accepts the file.\n");}
                 AnswerSender(CommunicationSocketFd, true);
@@ -280,7 +281,7 @@ int StartServer(){
                continue;
 
             /*if user wants to reject file (note that recv thread shud set IncomingFileRequest.active = true)*/
-            } else if (InputText == "/reject"){
+            } else if (InputText == CMD_REJECT){
                if(IncomingFileRequest.active == true){
                     if(EnableDebug){printf("[dbg] User rejects the file.\n");}
                 AnswerSender(CommunicationSocketFd, false);
@@ -288,7 +289,33 @@ int StartServer(){
                 printf("[INFO] There are no pending file transfer requets to reject.\n");
                }
                continue;
-            } 
+            } else if (InputText == CMD_FILEPROMPT){
+                FileTransferMode = true;
+                    if(EnableDebug){printf("[dbg] Received request to select a file to send.\n");}
+                const char* selected  = tinyfd_openFileDialog(
+                    "Select a file", 
+                    "", 
+                    0, 
+                    nullptr, 
+                    nullptr, 
+                    0);
+                if (selected){
+                    std::string FilePath = selected;
+                    FileMetadata meta = CreateFileMetadata(FilePath);
+                    printf("[File selected]: %s. [File size]: %luB. Send? [Y/N]: \n", 
+                        FilePath.c_str(), 
+                        meta.FileSize);
+                        
+                    std::string answer;
+                    std::getline(std::cin, answer);
+                    if(answer == "Y" || answer == "y"){
+                        NegotiateReceiver(CommunicationSocketFd, meta);
+                    }
+                } else {
+                    printf("File selection cancelled.\n");
+                    continue;
+                }
+            }
 
             /*SENDING PACKET LOGIC*/
           

@@ -27,6 +27,7 @@ bool EnableDebug = false;
 bool RunningMode;
 volatile bool ProgramRunning = true;
 bool ActiveFileNegReq = false;
+bool FileTransferMode = false;
 
 void HandleExit(){
     ProgramRunning = false;
