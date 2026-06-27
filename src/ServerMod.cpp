@@ -182,9 +182,12 @@ int RunRecvThread(ServerInstance& server){
         /*for the case where we are the "askers" and we expect a RESPONSE from the peer.*/
 
         } else if (MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_CTL == FILE_ACCEPT && ActiveFileNegReq == true){
-            printf("YAY USER ACCEPTED THE FILE!! TRANSFER WILL BEGIN HERE.\n");
-            //TODO: implement the actual file transfer.
+                if(EnableDebug){printf("[dbg] User ACCEPTED the incoming file request.\n");}
+            //TODO: implement the actual file transfer by sending outgoing packet struct to the sender.
         } else if (MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_CTL == FILE_REJECT && ActiveFileNegReq == true){
+                if(EnableDebug){printf("[dbg] User rejected the incoming file request.\n");}
+            ActiveFileNegReq = false;
+            IncomingFileRequest.active = false;
             printf("[INFO] The peer rejected to receive file(s).\n");
         }
 
@@ -199,8 +202,8 @@ int RunRecvThread(ServerInstance& server){
                     IncomingFileRequest.active = false;
                     printf("[INFO] Sorry, file transfer request was cancelled by the sender.\n");
                 }
-                
                 //TODO: add a deleting the half-transferred filed logic here (add a file-transfer detection logic 1st)
+                break;
         }
     }   
     return 0;
@@ -266,55 +269,61 @@ int StartServer(){
             std::getline(std::cin, InputText);
             MessagePacket.PL_BODY.assign(InputText.begin(), InputText.end());
 
-            if(InputText== "/~STOP~/"){
-                StopServer(NewServer);
-                if(EnableDebug){printf("[dbg] Recieved string to stop the server.\n");}
 
-            /*if user wants to accept file (note that recv thread shud set IncomingFileRequest.active = true)*/
-            } else if (InputText == CMD_ACCEPT){
-               if(IncomingFileRequest.active == true){
-                    if(EnableDebug){printf("[dbg] User accepts the file.\n");}
-                AnswerSender(CommunicationSocketFd, true);
-               } else {
-                printf("[INFO] There are no pending file transfer requets to accept.\n");
-               }
-               continue;
-
-            /*if user wants to reject file (note that recv thread shud set IncomingFileRequest.active = true)*/
-            } else if (InputText == CMD_REJECT){
-               if(IncomingFileRequest.active == true){
-                    if(EnableDebug){printf("[dbg] User rejects the file.\n");}
-                AnswerSender(CommunicationSocketFd, false);
-               } else {
-                printf("[INFO] There are no pending file transfer requets to reject.\n");
-               }
-               continue;
-            } else if (InputText == CMD_FILEPROMPT){
-                FileTransferMode = true;
-                    if(EnableDebug){printf("[dbg] Received request to select a file to send.\n");}
-                const char* selected  = tinyfd_openFileDialog(
-                    "Select a file", 
-                    "", 
-                    0, 
-                    nullptr, 
-                    nullptr, 
-                    0);
-                if (selected){
-                    std::string FilePath = selected;
-                    FileMetadata meta = CreateFileMetadata(FilePath);
-                    printf("[File selected]: %s. [File size]: %luB. Send? [Y/N]: \n", 
-                        FilePath.c_str(), 
-                        meta.FileSize);
-                        
-                    std::string answer;
-                    std::getline(std::cin, answer);
-                    if(answer == "Y" || answer == "y"){
-                        NegotiateReceiver(CommunicationSocketFd, meta);
+            switch(ParseCommands(InputText)){
+                case Command::Unknown:
+                    printf("[ERROR] Invalid command.\n");
+                    break;
+                
+                case Command::Stop:
+                    StopServer(NewServer);
+                        if(EnableDebug){printf("[dbg] Recieved string to stop the server.\n");}
+                    break;
+                
+                case Command::Accept:
+                    if(IncomingFileRequest.active == true){
+                            if(EnableDebug){printf("[dbg] User accepts the file.\n");}
+                        AnswerSender(CommunicationSocketFd, true);
+                    } else {
+                        printf("[INFO] There are no pending file transfer requets to accept.\n");
                     }
-                } else {
-                    printf("File selection cancelled.\n");
-                    continue;
-                }
+                    break;
+
+                case Command::Reject:
+                    if(IncomingFileRequest.active == true){
+                            if(EnableDebug){printf("[dbg] User rejects the file.\n");}
+                        AnswerSender(CommunicationSocketFd, false);
+                    } else {
+                        printf("[INFO] There are no pending file transfer requets to reject.\n");
+                    }
+                    break;
+                
+                case Command::FilePrompt:
+                    FileTransferMode = true;
+                            if(EnableDebug){printf("[dbg] Received request to select a file to send.\n");}
+                        const char* selected  = tinyfd_openFileDialog(
+                                        "Select a file", 
+                                        "", 
+                                        0, 
+                                        nullptr, 
+                                        nullptr, 
+                                        0);
+                    if (selected){
+                        std::string FilePath = selected;
+                        FileMetadata meta = CreateFileMetadata(FilePath);
+                        printf("[File selected]: %s. [File size]: %luB. Send? [Y/N]: \n", 
+                            FilePath.c_str(), 
+                            meta.FileSize);
+                        
+                        std::string answer;
+                        std::getline(std::cin, answer);
+                        if(answer == "Y" || answer == "y"){
+                            NegotiateReceiver(CommunicationSocketFd, meta);
+                        }
+                    } else {
+                        printf("File selection cancelled.\n");
+                    }
+                    break;
             }
 
             /*SENDING PACKET LOGIC*/

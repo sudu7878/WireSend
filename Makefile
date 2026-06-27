@@ -4,7 +4,7 @@ BUILD = builds/TestBuilds
 
 	
 all:
-	g++ -Iheaders -std=c++17 src/CommunMod.cpp src/api.cpp src/ClientMod.cpp src/ServerMod.cpp src/UserHandler.cpp -o wires -L. nimlib.so
+	g++ -Iheaders -std=c++17 src/CommunMod.cpp src/api.cpp src/ClientMod.cpp src/ServerMod.cpp src/UserHandler.cpp src/FileHandler.cpp src/tinyfiledialogs.cpp  -o wires -L. nimlib.so
 
 
 	

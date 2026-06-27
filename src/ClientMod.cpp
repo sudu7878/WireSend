@@ -5,6 +5,8 @@
 #include "UserHandler.hpp"
 #include "api.hpp"
 #include "CommunMod.hpp"
+#include "FileHandler.hpp"
+#include "tinyfiledialogs.hpp"
 
 
 #include <functional>
@@ -22,6 +24,7 @@
 #include <vector>
 
 bool ClientConnected = false;
+PendingFileRequest IncomingFileRequest;
 
 /*CLIENT CLASS FUNCTIONS*/
 
@@ -132,7 +135,22 @@ int RunRecvThread(ClientInstance& client){
             
             printf("[SERVER]: %s\n", ReceivedText.c_str());
 
+        } else if (MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_CTL == NO_ARG && !ActiveFileNegReq){
+            FileMetadata metada = DeserializeFileMetadataPacket(MessagePacket.PL_BODY);
+            IncomingFileRequest.active = true;
+            IncomingFileRequest.metadata = metada;
+            PrintIncomingFileInfo(metada.FileSize, metada.FileName);
+        } else if (MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_TYPE == FILE_ACCEPT && ActiveFileNegReq == true){
+                if(EnableDebug){printf("[dbg] User ACCEPTED the incoming file request.\n");}
+            //TODO implement the actual transfer
+        } else if(MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_TYPE == FILE_REJECT && ActiveFileNegReq == true){
+                    if(EnableDebug){printf("[dbg] User rejected the incoming file request.\n");}
+                ActiveFileNegReq = false;
+                IncomingFileRequest.active = false;
+                printf("[INFO] The peer rejected to receive file(s).'\n");
         }
+
+
          switch (MessagePacket.PL_CTL) {
                 case NO_ARG:
                     break;
@@ -140,6 +158,14 @@ int RunRecvThread(ClientInstance& client){
                     TerminateConnection(client);
                     ClientConnected = false;
                     break;
+                case CANCEL_TRANS:
+                    if(MessagePacket.PL_TYPE == FILE_NEG){
+                        IncomingFileRequest.active = false;
+                        ActiveFileNegReq = false;
+                        printf("[INFO]: Sorry, file transfer request was cancelled by the sender.\n");
+                    }
+
+                    //TODO: add a deleting the half-transferred filed logic here (add a file-transfer detection logic 1st)
         
         }
         //TODO: add support for the file receving stuff by MessagePacket.PL_TYPE = FILE_TRANSFER
