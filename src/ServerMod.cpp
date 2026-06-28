@@ -7,10 +7,12 @@
 #include "api.hpp"
 #include "tinyfiledialogs.hpp"
 
+#include <cerrno>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <functional>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -26,6 +28,8 @@ bool ServerConnected = false;
 PendingFileRequest IncomingFileRequest;
 
 /*SERVER CLASS FUNCTIONS*/
+
+ServerInstance::ServerInstance(uint16_t port):serv_port(port){}
 
 int ServerInstance::GetPort(){
     return serv_port;
@@ -49,7 +53,14 @@ bool ServerInstance::BindSocketToServer(){
     int opt = 1;
     setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
-    if (bind(sockfd, (struct sockaddr *) &serv_address, sizeof(serv_address)) < 0){
+    if (bind(sockfd, 
+             reinterpret_cast<sockaddr*>(&serv_address),
+             sizeof(serv_address)) < 0){
+        if(errno == EADDRINUSE){
+            printf("[ERROR] Port %u is already in use. Please choose another one.\n", static_cast<unsigned>(serv_port));
+        } else if (errno == EACCES){
+            printf("[ERROR] Permission denied while binding port %u. Please choose another one.\n", static_cast<unsigned>(serv_port));
+        }
         perror("[ERROR] Binding Error");
         return false;
     }
@@ -222,10 +233,11 @@ void LockDoor(ServerInstance& server){
 
 //HOST LOOP
 
-int StartServer(){
+int StartServer(uint16_t port){
 
     /*INITIALIZE HOST*/
-    ServerInstance NewServer;
+    ServerInstance NewServer(port);
+
         NewServer.CreateSocketFd();
             if(EnableDebug){printf("[dbg] Server socket creation successful. Socket FD: %d\n", NewServer.GetFd());}
         bool BindFlag = NewServer.BindSocketToServer();
