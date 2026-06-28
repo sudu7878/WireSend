@@ -8,7 +8,6 @@
 #include "FileHandler.hpp"
 #include "tinyfiledialogs.hpp"
 
-
 #include <functional>
 #include <string>
 #include<thread>
@@ -23,8 +22,9 @@
 #include <unistd.h>
 #include <vector>
 
+
 bool ClientConnected = false;
-PendingFileRequest IncomingFileRequest;
+PendingFileRequest IncomingFileRequestClient;
 
 /*CLIENT CLASS FUNCTIONS*/
 
@@ -130,15 +130,15 @@ int RunRecvThread(ClientInstance& client){
             std::string ReceivedText(MessagePacket.PL_BODY.begin(), MessagePacket.PL_BODY.end());
 
             if (MessagePacket.PL_TYPE == MESSAGE_BROADCAST){
-                printf("[BROADCAST] Server: %s", ReceivedText.c_str());
+                printf("[BROADCAST] Host: %s", ReceivedText.c_str());
             }
             
-            printf("[SERVER]: %s\n", ReceivedText.c_str());
+            printf("[HOST]: %s\n", ReceivedText.c_str());
 
         } else if (MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_CTL == NO_ARG && !ActiveFileNegReq){
             FileMetadata metada = DeserializeFileMetadataPacket(MessagePacket.PL_BODY);
-            IncomingFileRequest.active = true;
-            IncomingFileRequest.metadata = metada;
+            IncomingFileRequestClient.active = true;
+            IncomingFileRequestClient.metadata = metada;
             PrintIncomingFileInfo(metada.FileSize, metada.FileName);
         } else if (MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_TYPE == FILE_ACCEPT && ActiveFileNegReq == true){
                 if(EnableDebug){printf("[dbg] User ACCEPTED the incoming file request.\n");}
@@ -146,7 +146,7 @@ int RunRecvThread(ClientInstance& client){
         } else if(MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_TYPE == FILE_REJECT && ActiveFileNegReq == true){
                     if(EnableDebug){printf("[dbg] User rejected the incoming file request.\n");}
                 ActiveFileNegReq = false;
-                IncomingFileRequest.active = false;
+                IncomingFileRequestClient.active = false;
                 printf("[INFO] The peer rejected to receive file(s).'\n");
         }
 
@@ -160,10 +160,11 @@ int RunRecvThread(ClientInstance& client){
                     break;
                 case CANCEL_TRANS:
                     if(MessagePacket.PL_TYPE == FILE_NEG){
-                        IncomingFileRequest.active = false;
+                        IncomingFileRequestClient.active = false;
                         ActiveFileNegReq = false;
                         printf("[INFO]: Sorry, file transfer request was cancelled by the sender.\n");
                     }
+                    break;
 
                     //TODO: add a deleting the half-transferred filed logic here (add a file-transfer detection logic 1st)
         
@@ -214,6 +215,57 @@ int StartClient(const char* ip, uint16_t port){
             CloseConnection(NewClient);
             return 0;
             break;
+        }
+
+        switch (ParseCommands(InputText)){
+            case Command::Unknown:
+                printf("[ERROR]: Invalid command.\n");
+                break;
+            
+            case Command::Accept:
+                if(IncomingFileRequestClient.active == true){
+                        if(EnableDebug){printf("[dbg] User accepts the file.\n");}
+                    AnswerSender(NewClient.GetFd(), true);
+                } else {
+                    printf("[INFO]: There are no pending file transfer requests to accept.\n");
+                }
+                break;
+
+            case Command::Reject:
+                if(IncomingFileRequestClient.active == true){
+                        if(EnableDebug){printf("[dbg] User rejects the file.\n");}
+                    AnswerSender(NewClient.GetFd(), false);
+                } else {
+                    printf("[INFO]: There are no pending file transfer requests to reject.\n");
+                }
+                break;
+            
+            case Command::Stop:
+                printf("[FORBIDDEN COMMAND]: This command is only meant for server/host.\n");
+                break;
+            
+            case Command::FilePrompt:
+                FileTransferMode = true;
+                    if(EnableDebug){printf("[dbg] Received request to select a file to send.\n");}
+                const char* selected = tinyfd_openFileDialog("Select a file", 
+                                              "", 
+                                              0, 
+                                              nullptr, 
+                                              nullptr, 
+                                              0);
+                if(selected){
+                    std::string FilePath = selected;
+                    FileMetadata meta = CreateFileMetadata(FilePath);
+                    printf("[File selected]: %s. [File size]: %luB. Send? [Y/N]: ", FilePath.c_str(), meta.FileSize);
+                    std::string answer;
+                    std::getline(std::cin, answer);
+                    if(answer == "Y" || answer == "y"){
+                        NegotiateReceiver(NewClient.GetFd(), meta);
+                    }
+                } else {
+                    printf("File selection cancelled.\n");
+                }
+                break;
         }
 
         /*SENDING PACKET LOGIC*/

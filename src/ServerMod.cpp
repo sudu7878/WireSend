@@ -18,18 +18,14 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <vector>
-
 #include <iostream>
-
 #include <thread>
-
-
-/*SERVER CLASS FUNCTIONS*/
 
 int CommunicationSocketFd = 0;
 bool ServerConnected = false;
 PendingFileRequest IncomingFileRequest;
 
+/*SERVER CLASS FUNCTIONS*/
 
 int ServerInstance::GetPort(){
     return serv_port;
@@ -224,11 +220,11 @@ void LockDoor(ServerInstance& server){
             if(EnableDebug){printf("[dbg] Server connection socket closure successful.\n");}
 }
 
-//SERVER LOOP
+//HOST LOOP
 
 int StartServer(){
 
-    /*INITIALIZE SERVER*/
+    /*INITIALIZE HOST*/
     ServerInstance NewServer;
         NewServer.CreateSocketFd();
             if(EnableDebug){printf("[dbg] Server socket creation successful. Socket FD: %d\n", NewServer.GetFd());}
@@ -236,7 +232,7 @@ int StartServer(){
 
         //necessary err check
         if(BindFlag == false){
-                if(EnableDebug){printf("[dbg] Binding socekt to address FAILED.\n");}
+                if(EnableDebug){printf("[dbg] Binding socekt to address failed.\n");}
             StopServer(NewServer);
             ProgramRunning = false;
             return -1; 
@@ -269,6 +265,9 @@ int StartServer(){
             std::getline(std::cin, InputText);
             MessagePacket.PL_BODY.assign(InputText.begin(), InputText.end());
 
+            if(MessagePacket.PL_BODY.empty()){
+                continue;;
+            }
 
             switch(ParseCommands(InputText)){
                 case Command::Unknown:
@@ -311,7 +310,7 @@ int StartServer(){
                     if (selected){
                         std::string FilePath = selected;
                         FileMetadata meta = CreateFileMetadata(FilePath);
-                        printf("[File selected]: %s. [File size]: %luB. Send? [Y/N]: \n", 
+                        printf("[File selected]: %s. [File size]: %luB. Send? [Y/N]: ", 
                             FilePath.c_str(), 
                             meta.FileSize);
                         
