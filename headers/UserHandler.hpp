@@ -1,12 +1,13 @@
 /*FileName: UserHandler.hpp*/
 
+#include <cstdint>
 #pragma onces
-#ifndef SERVER_MODULE_HPP
-#define SERVER_MODULE_HPP
+#ifndef USER_HANDLER_HPP
+#define USER_HANDLER_HPP
 
 #include <stdint.h>
 
-int StartServer();
+int StartServer(uint16_t port);
 int StartClient(const char* ip, uint16_t port);
 
 #endif /*USER_HANDLER_HPP*/
