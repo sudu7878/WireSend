@@ -70,10 +70,10 @@ void PrintServerInfo(uint16_t port){
 
 void PrintIncomingFileInfo(uint64_t FileSize, std::string FileName){
     printf("\n========NEW FILE TRANSFER REQUEST========\n");
-    printf("    You have a new file transfer request");
+    printf("    You have a new file transfer request\n");
     printf("        File name: %s\n", FileName.c_str());
     printf("        File size: %lu\n", FileSize);
-    printf("        Would you like to accept?");
+    printf("        Would you like to accept?\n");
     printf("==========================================\n\n");
 }
 
