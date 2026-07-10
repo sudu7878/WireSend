@@ -190,6 +190,8 @@ int RunRecvThread(ServerInstance& server){
 
         } else if (MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_CTL == FILE_ACCEPT && ActiveFileNegReq == true){
                 if(EnableDebug){printf("[dbg] User ACCEPTED the incoming file request.\n");}
+                ActiveFileNegReq = false;
+                printf("[INFO] The peer accepted to receive file(s).\n");
             //TODO: implement the actual file transfer by sending outgoing packet struct to the sender.
         } else if (MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_CTL == FILE_REJECT && ActiveFileNegReq == true){
                 if(EnableDebug){printf("[dbg] User rejected the incoming file request.\n");}
@@ -295,6 +297,7 @@ int StartServer(uint16_t port){
                     if(IncomingFileRequest.active == true){
                             if(EnableDebug){printf("[dbg] User accepts the file.\n");}
                         AnswerSender(CommunicationSocketFd, true);
+                        IncomingFileRequest.active = false;
                     } else {
                         printf("[INFO] There are no pending file transfer requets to accept.\n");
                     }
@@ -304,6 +307,7 @@ int StartServer(uint16_t port){
                     if(IncomingFileRequest.active == true){
                             if(EnableDebug){printf("[dbg] User rejects the file.\n");}
                         AnswerSender(CommunicationSocketFd, false);
+                        IncomingFileRequest.active = false;
                     } else {
                         printf("[INFO] There are no pending file transfer requets to reject.\n");
                     }

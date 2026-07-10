@@ -140,10 +140,15 @@ int RunRecvThread(ClientInstance& client){
             IncomingFileRequestClient.active = true;
             IncomingFileRequestClient.metadata = metada;
             PrintIncomingFileInfo(metada.FileSize, metada.FileName);
-        } else if (MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_TYPE == FILE_ACCEPT && ActiveFileNegReq == true){
-                if(EnableDebug){printf("[dbg] User ACCEPTED the incoming file request.\n");}
+
+        /*for the case where we are the "askers" and we expect a RESPONSE from the peer.*/
+
+        } else if (MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_CTL == FILE_ACCEPT && ActiveFileNegReq == true){
+                    if(EnableDebug){printf("[dbg] User ACCEPTED the incoming file request.\n");}
+                ActiveFileNegReq = false;
+                printf("[INFO] The peer accepted to receive file(s).\n");
             //TODO implement the actual transfer
-        } else if(MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_TYPE == FILE_REJECT && ActiveFileNegReq == true){
+        } else if(MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_CTL == FILE_REJECT && ActiveFileNegReq == true){
                     if(EnableDebug){printf("[dbg] User rejected the incoming file request.\n");}
                 ActiveFileNegReq = false;
                 IncomingFileRequestClient.active = false;
@@ -226,6 +231,7 @@ int StartClient(const char* ip, uint16_t port){
                 if(IncomingFileRequestClient.active == true){
                         if(EnableDebug){printf("[dbg] User accepts the file.\n");}
                     AnswerSender(NewClient.GetFd(), true);
+                    IncomingFileRequestClient.active = false;
                 } else {
                     printf("[INFO]: There are no pending file transfer requests to accept.\n");
                 }
@@ -235,6 +241,7 @@ int StartClient(const char* ip, uint16_t port){
                 if(IncomingFileRequestClient.active == true){
                         if(EnableDebug){printf("[dbg] User rejects the file.\n");}
                     AnswerSender(NewClient.GetFd(), false);
+                    IncomingFileRequestClient.active = false;
                 } else {
                     printf("[INFO]: There are no pending file transfer requests to reject.\n");
                 }

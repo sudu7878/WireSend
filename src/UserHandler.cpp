@@ -83,6 +83,7 @@ int main(int argc, char *argv[]){
     if(RunningMode){StartServer(ServerPort);} 
     //CLIENT MODE
     if (!RunningMode){StartClient(argv[2], atoi(argv[3]));}
+    if (!EnableDebug){printf("[dbg] Branched of successfully.\n");}
 
     return 0;
 }
