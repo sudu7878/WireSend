@@ -26,7 +26,8 @@
 
 int CommunicationSocketFd = 0;
 bool ServerConnected = false;
-PendingFileRequest IncomingFileRequest;
+PendingIncomingFileRequest IncomingFileRequest;
+PendingOutgoingFileRequest OutgoingFileRequest;
 
 /*SERVER CLASS FUNCTIONS*/
 
@@ -299,11 +300,24 @@ int StartServer(uint16_t port){
                 
                 case Command::Accept:
                     if(IncomingFileRequest.active == true){
-                            if(EnableDebug){printf("[dbg] User accepts the file.\n");}
-                        AnswerSender(CommunicationSocketFd, true);
-                        IncomingFileRequest.active = false;
-                    } else {
-                        printf("[INFO] There are no pending file transfer requets to accept.\n");
+                        if(EnableDebug){printf("[dbg] User accepts the file.\n");}
+
+                        const char* DestinationPath = tinyfd_saveFileDialog("Save to?", 
+                                                                            "", 
+                                                                            0, 
+                                                                            nullptr, 
+                                                                            nullptr);
+                        
+                        if(DestinationPath){
+                            IncomingFileRequest.FilePathOnTarget = DestinationPath; //set up where to save
+                            printf("[INFO] Saving to: %s.\n", IncomingFileRequest.FilePathOnTarget.c_str());
+                            AnswerSender(CommunicationSocketFd, true);
+
+                            /*
+                                IncomingFileRequest.active = false. // set this when we are done with the transfer or cancel it
+                            */
+                        }
+
                     }
                     break;
 
@@ -337,6 +351,9 @@ int StartServer(uint16_t port){
                         std::string answer;
                         std::getline(std::cin, answer);
                         if(answer == "Y" || answer == "y"){
+                            OutgoingFileRequest.active = true;
+                            OutgoingFileRequest.metadata = meta;
+                            OutgoingFileRequest.FilePathOnSrc = FilePath;
                             NegotiateReceiver(CommunicationSocketFd, meta);
                         }
                     } else {

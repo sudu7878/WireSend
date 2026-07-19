@@ -16,7 +16,6 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#include <string>
 #include <vector>
 #include <ifaddrs.h>
 
@@ -42,27 +41,27 @@ struct TemporaryPacketBody{
 
 
 enum PacketType{
-    MESSAGE = 0,
-    MESSAGE_BROADCAST = 1,
-
-    FILE_TRANSFER = 2,
-    FILE_NEG = 3,
-    FILE_BEGIN = 4,
-    FILE_CHUNK = 5,
-    FILE_END = 6
+    MESSAGE,
+    MESSAGE_BROADCAST,
+    FILE_TRANSFER,
+    FILE_NEG,
+    FILE_BEGIN,
+    FILE_CHUNK,
+    FILE_END
 };
 
 enum Flags{
-    FILE_SUCC = 7,
-    FILE_FAIL = 8,
-    CANCEL_TRANS = 9
+    FILE_SUCC,
+    FILE_FAIL,
+    FILE_READY,
 };
 
 enum ControlType{
-    NO_ARG = 10,
-    FILE_ACCEPT = 11,
-    FILE_REJECT = 12,
-    END_CONNECTION = 13
+    NO_ARG,
+    FILE_ACCEPT,
+    FILE_REJECT,
+    CANCEL_TRANS,
+    END_CONNECTION
 };
 
 /*Never forget to tell this function which endiannes to use or the world is over.*/

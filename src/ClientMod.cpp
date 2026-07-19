@@ -25,7 +25,8 @@
 
 
 bool ClientConnected = false;
-PendingFileRequest IncomingFileRequestClient;
+PendingIncomingFileRequest IncomingFileRequestClient;
+PendingOutgoingFileRequest OutgoingFileRequestClient;
 
 /*CLIENT CLASS FUNCTIONS*/
 
@@ -234,8 +235,22 @@ int StartClient(const char* ip, uint16_t port){
             case Command::Accept:
                 if(IncomingFileRequestClient.active == true){
                         if(EnableDebug){printf("[dbg] User accepts the file.\n");}
-                    AnswerSender(NewClient.GetFd(), true);
-                    IncomingFileRequestClient.active = false;
+
+                    const char* DestinationPath = tinyfd_saveFileDialog("Save to?", 
+                                                                        "", 
+                                                                        0, 
+                                                                        nullptr, 
+                                                                        nullptr);
+
+                    if(DestinationPath){
+                        IncomingFileRequestClient.FilePathOnTarget = DestinationPath;   //set up where to save
+                        printf("[INFO] Saving to: %s.\n", IncomingFileRequestClient.FilePathOnTarget.c_str());
+                        AnswerSender(NewClient.GetFd(), true);
+                        /*
+                        TODO: set this when we are done with the transfer or cancel it
+                        IncomingFileRequestClient.active = false;*/
+                    }
+
                 } else {
                     printf("[INFO]: There are no pending file transfer requests to accept.\n");
                 }
@@ -271,6 +286,9 @@ int StartClient(const char* ip, uint16_t port){
                     std::string answer;
                     std::getline(std::cin, answer);
                     if(answer == "Y" || answer == "y"){
+                        OutgoingFileRequestClient.active =true;
+                        OutgoingFileRequestClient.metadata = meta;
+                        OutgoingFileRequestClient.FilePathOnSrc = FilePath;
                         NegotiateReceiver(NewClient.GetFd(), meta);
                     }
                 } else {

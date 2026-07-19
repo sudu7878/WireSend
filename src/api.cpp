@@ -73,8 +73,9 @@ void PrintIncomingFileInfo(uint64_t FileSize, std::string FileName){
     printf("    You have a new file transfer request\n");
     printf("        File name: %s\n", FileName.c_str());
     printf("        File size: %lu\n", FileSize);
-    printf("        Would you like to accept?\n");
+    printf("       Would you like to accept?\n");
     printf("==========================================\n\n");
+    printf("'/a' or '/r' to accept/reject respectively.\n");
 }
 
 bool UserAction(void){

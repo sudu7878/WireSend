@@ -9,6 +9,8 @@
 #include <string>
 
 
+/*note: the variables are named in third person view: "OnTarget" means the peer receiving the file, "OnSrc means the one
+sending the file."*/
 
 //there is no seperate packet consturction for ts. i stuff it all into PL_BODY hehehaha
 struct FileMetadata{
@@ -16,8 +18,15 @@ struct FileMetadata{
     std::string FileName;   /*dynamic*/
 };
 
-struct PendingFileRequest{
+struct PendingIncomingFileRequest{
     bool active;
+    std::string FilePathOnTarget;
+    FileMetadata metadata;
+};
+
+struct PendingOutgoingFileRequest{
+    bool active = false;
+    std::string FilePathOnSrc;
     FileMetadata metadata;
 };
 

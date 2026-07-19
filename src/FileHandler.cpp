@@ -4,14 +4,12 @@
 #include "api.hpp"
 
 #include <cstdint>
-#include <cstdlib>
 
 
 #include <filesystem>
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <string.h>
 #include <string>
 #include <vector>
 
