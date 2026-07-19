@@ -170,10 +170,3 @@ int SendPacket(std::vector<uint8_t> &msgbuff, int fd){
     return 0;
 };
 
-Command ParseCommands(const std::string &input){
-    if(input == CMD_STOP) return Command::Stop;
-    if(input == CMD_ACCEPT) return Command::Accept;
-    if(input == CMD_FILEPROMPT) return Command::FilePrompt;
-    if(input == CMD_REJECT) return Command::Reject;
-    return Command::Unknown;
-}

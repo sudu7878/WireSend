@@ -21,28 +21,11 @@
 
 #include <ifaddrs.h>
 
-constexpr auto CMD_STOP = "/~STOP~/";
-constexpr auto CMD_FILEPROMPT = "/~FILE~/";
-constexpr auto CMD_ACCEPT = "/accept";
-constexpr auto CMD_REJECT = "/reject";
-
-enum class Command{
-    Stop,
-    Accept, 
-    Reject, 
-    FilePrompt, 
-    Unknown
-};
-
-
-
-
 extern bool EnableDebug;
 extern volatile bool ProgramRunning;
 extern bool RunningMode;                       /*1 for server. 0 for client */
 extern bool ActiveFileNegReq;
 extern bool FileTransferMode;
-
 
 
 void HandleExit(int sig);
@@ -71,6 +54,5 @@ int SendPacket(std::vector<uint8_t> &msgbuff, int fd);
 
 bool UserAction(void);
 
-Command ParseCommands(const std::string &input);
 
 #endif  /*API_HPP*/

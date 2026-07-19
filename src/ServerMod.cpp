@@ -6,6 +6,7 @@
 #include "UserHandler.hpp"
 #include "api.hpp"
 #include "tinyfiledialogs.hpp"
+#include "CmdHandler.hpp"
 
 #include <cerrno>
 #include <cstddef>
@@ -284,6 +285,9 @@ int StartServer(uint16_t port){
             }
 
             switch(ParseCommands(InputText)){
+                case Command::NotACommand:
+                    break;
+                
                 case Command::Unknown:
                     printf("[ERROR] Invalid command.\n");
                     break;

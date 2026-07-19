@@ -7,6 +7,7 @@
 #include "CommunMod.hpp"
 #include "FileHandler.hpp"
 #include "tinyfiledialogs.hpp"
+#include "CmdHandler.hpp"
 
 #include <functional>
 #include <string>
@@ -223,6 +224,9 @@ int StartClient(const char* ip, uint16_t port){
         }
 
         switch (ParseCommands(InputText)){
+            case Command::NotACommand:
+                break;
+
             case Command::Unknown:
                 printf("[ERROR]: Invalid command.\n");
                 break;
