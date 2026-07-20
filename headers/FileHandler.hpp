@@ -22,13 +22,13 @@ struct PendingIncomingFileRequest{
     bool active;
     std::string FilePathOnTarget;
     FileMetadata metadata;
-};
+};  //for the receiving side
 
 struct PendingOutgoingFileRequest{
     bool active = false;
     std::string FilePathOnSrc;
     FileMetadata metadata;
-};
+};  //for the sending side
 
 FileMetadata CreateFileMetadata(std::string &filepath);
 
@@ -36,8 +36,8 @@ bool NegotiateReceiver(int fd, FileMetadata &metadata);
 bool AnswerSender(int fd, bool response);
 
 
-int SendFile(int fd, std::string &SourceFilePath);
-int RecvFile(int fd, std::string &DestinationPath);
+int SendFile(int fd, FileMetadata meta,PendingOutgoingFileRequest &OutgoingFile);
+int RecvFile(int fd, FileMetadata meta, PendingIncomingFileRequest &IncomingFile);
 
 constexpr uint32_t DEFAULT_FILE_CHUNK_SIZE = 6400;  //64KB
 

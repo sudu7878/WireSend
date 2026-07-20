@@ -78,6 +78,7 @@ void PrintIncomingFileInfo(uint64_t FileSize, std::string FileName){
     printf("'/a' or '/r' to accept/reject respectively.\n");
 }
 
+//TODO: change the implementation later so that it doesnt hang the parent thread until the user answers something.
 bool UserAction(void){
     if(std::cin.peek() == '\n'){
         std::cin.ignore();

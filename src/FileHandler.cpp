@@ -19,6 +19,11 @@
 
 namespace fs = std::filesystem;
 
+void dbgPrintRecvFileInfo(PendingIncomingFileRequest &IncomingFile){
+    std::filesystem::path path(IncomingFile.FilePathOnTarget);
+    printf("[dbg] Saving %s to %s.\n", path.filename().stem().string().c_str(), path.c_str());
+}
+
 FileMetadata CreateFileMetadata(std::string &filepath){
     FileMetadata metadata;
 
@@ -90,4 +95,61 @@ bool AnswerSender(int fd, bool response){
         return false;
     }
 
+}
+
+bool CanReceiveFiles(PendingIncomingFileRequest &IncomingFile, FileMetadata meta){
+    std::filesystem::path path(IncomingFile.FilePathOnTarget);
+    auto info = fs::space(path.parent_path());
+
+    std::string mainName = path.stem().string();    //get the name of the file
+    std::string ext = path.extension().string();    //get the extension
+    fs::path parent = path.parent_path();           //get the parent folder path to have a target for search
+
+    if(info.available < meta.FileSize){
+        printf("[FILE HANLDER MODULE ERROR]: Not enough disk space.\n");
+        return false;
+    }
+
+    if(fs::exists(path)){
+        printf("[WARNING]: The filename already exists. Do you want to overwrite it?\n");
+        bool UserResponse = UserAction();
+
+        if (UserResponse){
+                if(EnableDebug){printf("[dbg] Starting overwriting action now.\n");}
+
+            int counter = 1;
+            fs::path newPath = path;
+
+            /*changing the file name here itself so we update the main struct that gets the name written directly by RecvFile.*/
+
+            while(fs::exists(newPath)){
+                newPath = parent / (mainName + "(" + std::to_string(counter) + ")" + ext);
+                counter ++;
+            }
+
+            IncomingFile.FilePathOnTarget = newPath.string(); //apply the stuff we did
+                if(EnableDebug){printf("[dbg] Overwriting action finished.\n");}
+        } else {
+            return UserResponse;
+        }
+    }
+    return true;
+}
+
+int RecvFile(int fd, FileMetadata meta,PendingIncomingFileRequest &IncomingFile){
+            if(EnableDebug){printf("Received command to recv files.\n");}
+
+    if(CanReceiveFiles(IncomingFile, meta)){
+            if(EnableDebug){dbgPrintRecvFileInfo(IncomingFile);}
+        
+
+
+            
+        
+    } else {
+        printf("[FILE HANDLER ERROR]: Failed to receive the file.\n");
+        return -1;
+    }
+
+    
 }
