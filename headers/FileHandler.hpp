@@ -20,6 +20,7 @@ struct FileMetadata{
 
 struct PendingIncomingFileRequest{
     bool active;
+    bool Overwrite;
     std::string FilePathOnTarget;
     FileMetadata metadata;
 };  //for the receiving side

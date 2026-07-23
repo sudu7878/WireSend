@@ -21,7 +21,6 @@
 
 #include <ifaddrs.h>
 
-size_t PacketSize = 0;
 
 //the packet is serialized and deserialized in the same order.
 
@@ -135,3 +134,5 @@ FileMetadata DeserializeFileMetadataPacket(std::vector<uint8_t> &buff){
     
     return MetadataStruct;
 }
+
+//File handler

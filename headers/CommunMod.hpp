@@ -39,6 +39,12 @@ struct TemporaryPacketBody{
     uint8_t ctl;
 };
 
+/*thef following is the struct to store the file chunk*/
+struct FileChunk{
+    uint32_t ChunkSize;
+    std::vector<uint8_t> data;
+};
+
 
 enum PacketType{
     MESSAGE,
@@ -74,6 +80,7 @@ std::vector<uint8_t> SerializePacket(Packet &data);
     /*deserialize*/
 TemporaryPacketHeader DeserializeHeaderPacket(const std::vector<uint8_t> &hdrbuff);
 TemporaryPacketBody DeserializeBodyPacket(const std::vector<uint8_t> &buff, TemporaryPacketHeader &hdr);
+
 Packet CombinePacket(TemporaryPacketHeader &hdr, TemporaryPacketBody &body);
 
 /*For file metadata packets*/

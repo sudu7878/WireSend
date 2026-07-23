@@ -141,7 +141,6 @@ int RunRecvThread(ServerInstance& server){
 
         
         HeaderPacket = DeserializeHeaderPacket(RecvMsgHdrBuff);
-            if(EnableDebug){printf("[dbg] Header Type: %d | Header Len: %u\n", HeaderPacket.type, HeaderPacket.len);}
 
         if(HeaderPacket.type == FILE_NEG && EnableDebug && ActiveFileNegReq){
             printf("[dbg] A file transfer negotiation request detected.\n");

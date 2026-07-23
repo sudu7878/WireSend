@@ -7,6 +7,7 @@
 
 
 #include <filesystem>
+#include <fstream>
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -24,10 +25,15 @@ void dbgPrintRecvFileInfo(PendingIncomingFileRequest &IncomingFile){
     printf("[dbg] Saving %s to %s.\n", path.filename().stem().string().c_str(), path.c_str());
 }
 
+void dbgPrintSendFileInfo(PendingOutgoingFileRequest &OutgoingFile){
+    std::filesystem::path path(OutgoingFile.FilePathOnSrc);
+    printf("[dbg] Sending %s from %s.\n", path.filename().stem().string().c_str(), path.c_str());
+}
+
 FileMetadata CreateFileMetadata(std::string &filepath){
     FileMetadata metadata;
 
-    //get the fkn filepath thts =valent to taking in file
+    //get the  filepath thts =valent to taking in file
     fs::path FilePath(filepath);
 
     metadata.FileSize = fs::file_size(FilePath);
@@ -115,8 +121,9 @@ bool CanReceiveFiles(PendingIncomingFileRequest &IncomingFile, FileMetadata meta
         bool UserResponse = UserAction();
 
         if (UserResponse){
-                if(EnableDebug){printf("[dbg] Starting overwriting action now.\n");}
-
+            IncomingFile.Overwrite = true;  //shud be referenced later
+        } else if (!UserResponse){
+            printf("[INFO]: A new file will be created.\n");
             int counter = 1;
             fs::path newPath = path;
 
@@ -129,15 +136,44 @@ bool CanReceiveFiles(PendingIncomingFileRequest &IncomingFile, FileMetadata meta
 
             IncomingFile.FilePathOnTarget = newPath.string(); //apply the stuff we did
                 if(EnableDebug){printf("[dbg] Overwriting action finished.\n");}
-        } else {
-            return UserResponse;
-        }
+        } 
     }
     return true;
 }
 
+bool CanSendFiles(PendingOutgoingFileRequest &OutgoingFile, FileMetadata meta){
+    std::filesystem::path path(OutgoingFile.FilePathOnSrc);
+
+    std::string mainName = path.stem().string();    //get the name of the file
+    std::string ext = path.extension().string();    //get the extension
+    fs::path parent = path.parent_path();           //get the parent folder path to have a target for search
+
+    if(!fs::exists(path)){
+        return false;
+    }
+    if(!fs::is_regular_file(path)){
+        return false;
+    }
+    std::ifstream file(path, std::ios::binary);
+    if(!file.is_open()){
+        printf("[FILE HANDLER MODULER ERROR]: The requested file cannot be opened.\n");
+        return false;
+    }
+
+    return true;
+}
+
+int SendFile(PendingOutgoingFileRequest &OutgoingFile, FileMetadata meta, int fd){
+        if(EnableDebug){printf("[dbg] Received command to send files.\n");}
+    if(CanSendFiles(OutgoingFile, meta)){
+            if(EnableDebug){dbgPrintSendFileInfo(OutgoingFile);}
+
+        
+    }
+}
+
 int RecvFile(int fd, FileMetadata meta,PendingIncomingFileRequest &IncomingFile){
-            if(EnableDebug){printf("Received command to recv files.\n");}
+            if(EnableDebug){printf("[dbg] Received command to recv files.\n");}
 
     if(CanReceiveFiles(IncomingFile, meta)){
             if(EnableDebug){dbgPrintRecvFileInfo(IncomingFile);}
@@ -151,5 +187,5 @@ int RecvFile(int fd, FileMetadata meta,PendingIncomingFileRequest &IncomingFile)
         return -1;
     }
 
-    
+    return 0;
 }
