@@ -8,6 +8,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <ios>
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -168,8 +169,36 @@ int SendFile(PendingOutgoingFileRequest &OutgoingFile, FileMetadata meta, int fd
     if(CanSendFiles(OutgoingFile, meta)){
             if(EnableDebug){dbgPrintSendFileInfo(OutgoingFile);}
 
+        std::ifstream file(OutgoingFile.FilePathOnSrc, std::ios::binary);
+        std::vector<uint8_t> buffer(DEFAULT_FILE_CHUNK_SIZE);
         
-    }
+        while(file){
+            file.read(reinterpret_cast<char*>(buffer.data()), buffer.size());
+
+            std::streamsize bytesRead = file.gcount();
+
+            if(bytesRead <= 0){
+                break;
+            }
+            FileChunk chunk;
+            chunk.data.assign(buffer.begin(), buffer.begin() + bytesRead);
+
+            Packet ChunkPacket;
+            ChunkPacket.PL_TYPE = FILE_TRANSFER;
+            ChunkPacket.PL_CTL = NO_ARG;
+            ChunkPacket.PL_BODY = SerializeFileChunk(chunk);
+
+            auto mainBuff = SerializePacket(ChunkPacket);
+            int SendStatus = SendPacket(mainBuff, fd);
+            if(SendStatus < 0){
+                printf("[FILE HANDLER MODULE ERROR]: Sending packet failed.\n");
+                return -1;
+            }
+        }
+        return 0;
+    } 
+    printf("[FILE HANDLER MODULE ERROR]: Cannot send the file braaah.\n");
+    return -1;
 }
 
 int RecvFile(int fd, FileMetadata meta,PendingIncomingFileRequest &IncomingFile){

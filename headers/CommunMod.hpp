@@ -88,5 +88,11 @@ std::vector<uint8_t> SerializeFileMetadataPacket(const FileMetadata &meta);
     /*deserialize*/
 FileMetadata DeserializeFileMetadataPacket(std::vector<uint8_t> &buff);
 
+/*For file chunk packets*/
+    /*serialize*/
+std::vector<uint8_t> SerializeFileChunk(const FileChunk& chunk);
+    /*deserialize*/
+FileChunk DeserializeFileChunk(const std::vector<uint8_t>& buff);
+
 #pragma pack(pop)
 #endif  /*COMMINCATION_MODULE*/
