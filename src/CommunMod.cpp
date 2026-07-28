@@ -136,3 +136,12 @@ FileMetadata DeserializeFileMetadataPacket(std::vector<uint8_t> &buff){
 }
 
 //File handler
+std::vector<uint8_t> SerializeFileChunk(const FileChunk& chunk){
+    //js return the data in a buffer
+    return chunk.data;
+}
+
+FileChunk DeserializeFileChunk(const std::vector<uint8_t>& buff){
+    //js assign it to the struct
+    return FileChunk{buff};
+}

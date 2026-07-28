@@ -40,7 +40,7 @@ bool AnswerSender(int fd, bool response);
 int SendFile(int fd, FileMetadata meta,PendingOutgoingFileRequest &OutgoingFile);
 int RecvFile(int fd, FileMetadata meta, PendingIncomingFileRequest &IncomingFile);
 
-constexpr uint32_t DEFAULT_FILE_CHUNK_SIZE = 6400;  //64KB
+constexpr uint32_t DEFAULT_FILE_CHUNK_SIZE = 64 * 1024; //64kb?
 
 
 #endif /*FILE_HANDLER_HPP*/

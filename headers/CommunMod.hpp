@@ -39,9 +39,8 @@ struct TemporaryPacketBody{
     uint8_t ctl;
 };
 
-/*thef following is the struct to store the file chunk*/
+/*thef following is the struct to handle the file chunk*/
 struct FileChunk{
-    uint32_t ChunkSize;
     std::vector<uint8_t> data;
 };
 

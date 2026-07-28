@@ -9,3 +9,4 @@ builds/
 *.temp
 .gitignore
 .cache
+.Makefile
