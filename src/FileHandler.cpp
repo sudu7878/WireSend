@@ -164,6 +164,7 @@ bool CanSendFiles(PendingOutgoingFileRequest &OutgoingFile, FileMetadata meta){
     return true;
 }
 
+//verrsion 1 with no redundency, no checksum calculation, just a simple implementation
 int SendFile(PendingOutgoingFileRequest &OutgoingFile, FileMetadata meta, int fd){
         if(EnableDebug){printf("[dbg] Received command to send files.\n");}
     if(CanSendFiles(OutgoingFile, meta)){
@@ -171,7 +172,20 @@ int SendFile(PendingOutgoingFileRequest &OutgoingFile, FileMetadata meta, int fd
 
         std::ifstream file(OutgoingFile.FilePathOnSrc, std::ios::binary);
         std::vector<uint8_t> buffer(DEFAULT_FILE_CHUNK_SIZE);
+
+        /*start frame of the file*/
+        Packet StartFileMarker;
+        StartFileMarker.PL_TYPE = FILE_BEGIN;
+        StartFileMarker.PL_CTL = NO_ARG;
+        auto StartBuff = SerializePacket(StartFileMarker);
+        int StartSendPacketStatus = SendPacket(StartBuff, fd);
+        if(StartSendPacketStatus < 0){
+            printf("[FILE HANDLER MODULE ERROR]: Sending start frame packet failed. Cannot proceed with file transfer for this instance.\n");
+                if(EnableDebug){printf("[dbg] The end frame send flag called in SendFile() returned %d.\n", StartSendPacketStatus);}
+            return -1;
+        }
         
+        /*main contents*/
         while(file){
             file.read(reinterpret_cast<char*>(buffer.data()), buffer.size());
 
@@ -192,15 +206,31 @@ int SendFile(PendingOutgoingFileRequest &OutgoingFile, FileMetadata meta, int fd
             int SendStatus = SendPacket(mainBuff, fd);
             if(SendStatus < 0){
                 printf("[FILE HANDLER MODULE ERROR]: Sending packet failed.\n");
+                    if(EnableDebug){printf("[dbg] The send flag called in SendFile() returned %d.\n", SendStatus);}
                 return -1;
             }
         }
+
+        /*end frame of the file*/
+        Packet EndFileMarker;
+        EndFileMarker.PL_TYPE = FILE_END;
+        EndFileMarker.PL_CTL = NO_ARG;
+        auto EndBuff = SerializePacket(EndFileMarker);
+        int EndSendPacketStatus = SendPacket(EndBuff, fd);
+        if(EndSendPacketStatus < 0){
+            printf("[FILE HANDLER MODULE ERROR]: Sending end frame packet failed. This may cause ambiguous behaviour.\n");
+                if(EnableDebug){printf("[dbg] The end frame send flag called in SendFile() returned %d.\n", EndSendPacketStatus);}
+            return -1;
+        }
+
+        /*return success if everything went well*/
         return 0;
     } 
-    printf("[FILE HANDLER MODULE ERROR]: Cannot send the file braaah.\n");
+    printf("[FILE HANDLER MODULE ERROR]: Cannot send the file. (what did u do huh)\n");
     return -1;
 }
 
+//only to be called in recv thread,may cause deadlocks otherwise
 int RecvFile(int fd, FileMetadata meta,PendingIncomingFileRequest &IncomingFile){
             if(EnableDebug){printf("[dbg] Received command to recv files.\n");}
 
