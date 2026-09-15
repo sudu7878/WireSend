@@ -4,6 +4,7 @@ compile_commands.json
 ftp
 wires
 builds/
+build/
 
 
 *.temp
