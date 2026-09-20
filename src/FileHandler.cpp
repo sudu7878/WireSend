@@ -3,6 +3,7 @@
 #include "CommunMod.hpp"
 #include "api.hpp"
 
+#include <cstddef>
 #include <cstdint>
 
 
@@ -13,6 +14,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string>
+#include <sys/ucontext.h>
 #include <vector>
 
 #include "CommunMod.hpp"
@@ -198,7 +200,7 @@ int SendFile(PendingOutgoingFileRequest &OutgoingFile, FileMetadata meta, int fd
             chunk.data.assign(buffer.begin(), buffer.begin() + bytesRead);
 
             Packet ChunkPacket;
-            ChunkPacket.PL_TYPE = FILE_TRANSFER;
+            ChunkPacket.PL_TYPE = FILE_CHUNK;
             ChunkPacket.PL_CTL = NO_ARG;
             ChunkPacket.PL_BODY = SerializeFileChunk(chunk);
 
@@ -230,20 +232,46 @@ int SendFile(PendingOutgoingFileRequest &OutgoingFile, FileMetadata meta, int fd
     return -1;
 }
 
-//only to be called in recv thread,may cause deadlocks otherwise
-int RecvFile(int fd, FileMetadata meta,PendingIncomingFileRequest &IncomingFile){
+//only to be called in recv thread.
+int RecvFile(Packet ReceievedFilePacket, FileMetadata meta,PendingIncomingFileRequest &IncomingFile){
+    
             if(EnableDebug){printf("[dbg] Received command to recv files.\n");}
 
-    if(CanReceiveFiles(IncomingFile, meta)){
-            if(EnableDebug){dbgPrintRecvFileInfo(IncomingFile);}
-        
+    if(ReceievedFilePacket.PL_TYPE == FILE_BEGIN){
 
+            if(EnableDebug){printf("Detected file begining packet.\n");}
 
-            
-        
-    } else {
-        printf("[FILE HANDLER ERROR]: Failed to receive the file.\n");
-        return -1;
+        if(CanReceiveFiles(IncomingFile, meta)){
+
+                if(EnableDebug){dbgPrintRecvFileInfo(IncomingFile);}
+
+                std::ofstream outFile(IncomingFile.FilePathOnTarget, std::ios::binary);
+
+                if(!outFile.is_open()){
+                    printf("[FILE HANDLER MODULE ERROR]: Unable to open the file.\n");
+                    return -1;
+                }
+
+                outFile.close();
+            }
+    } 
+
+    if(ReceievedFilePacket.PL_TYPE == FILE_CHUNK){
+        FileChunk chunk = DeserializeFileChunk(ReceievedFilePacket.PL_BODY);
+        std::ofstream outFile(IncomingFile.FilePathOnTarget, std::ios::binary | std::ios::app);
+        if(!outFile.is_open()){
+            printf("[FILE HANDLER MODULE ERROR]: File chunk packet error-Unable to open the file.\n");
+            return -1;
+        }
+        outFile.write(reinterpret_cast<char*>(chunk.data.data()), chunk.data.size());   ///write th ebytes
+        outFile.close();
+    }
+
+    if(ReceievedFilePacket.PL_TYPE == FILE_END){
+        printf("[INFO]: File recieved.\n");
+            if(EnableDebug){printf("[dbg]: File has been receieved.\n");}
+
+            //TODO: TO actually close the file here ideally. V0 for now.
     }
 
     return 0;

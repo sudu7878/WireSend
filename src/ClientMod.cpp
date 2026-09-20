@@ -20,13 +20,14 @@
 #include <cstring>
 #include <stdint.h>
 #include <sys/socket.h>
-#include <unistd.h>
+#include <unistd.h> 
 #include <vector>
 
 
 bool ClientConnected = false;
 PendingIncomingFileRequest IncomingFileRequestClient;
 PendingOutgoingFileRequest OutgoingFileRequestClient;
+bool FileRecvInProgress = false;
 
 /*CLIENT CLASS FUNCTIONS*/
 
@@ -177,6 +178,19 @@ int RunRecvThread(ClientInstance& client){
         
         }
         //TODO: add support for the file receving stuff by MessagePacket.PL_TYPE = FILE_TRANSFER
+
+        if ((MessagePacket.PL_TYPE == FILE_TRANSFER || MessagePacket.PL_TYPE == FILE_BEGIN || MessagePacket.PL_TYPE == FILE_CHUNK || MessagePacket.PL_TYPE == FILE_END)  
+            && IncomingFileRequestClient.active == true){
+                
+                if(EnableDebug){printf("[dbg] Detected a file incoming.\n");}
+                FileRecvInProgress = true;
+
+                while(FileRecvInProgress){
+                    
+                }
+                
+
+        } 
     }   
     return 0;
 }
@@ -236,7 +250,7 @@ int StartClient(const char* ip, uint16_t port){
                 if(IncomingFileRequestClient.active == true){
                         if(EnableDebug){printf("[dbg] User accepts the file.\n");}
 
-                    const char* DestinationPath = tinyfd_saveFileDialog("Save to?", 
+                    const char* DestinationPath = tinyfd_saveFileDialog("Save to", 
                                                                         "", 
                                                                         0, 
                                                                         nullptr, 

@@ -1,6 +1,7 @@
 /*FileName: CommMod.hpp*/
 
 #pragma once
+#include <cstddef>
 #pragma pack(push, 1)
 
 #include <cstdint>
@@ -50,9 +51,12 @@ enum PacketType{
     MESSAGE_BROADCAST,
     FILE_TRANSFER,
     FILE_NEG,
+};
+
+enum FileTransferBody{
     FILE_BEGIN,
     FILE_CHUNK,
-    FILE_END
+    FILE_END,
 };
 
 enum Flags{
@@ -72,6 +76,10 @@ enum ControlType{
 /*Never forget to tell this function which endiannes to use or the world is over.*/
 template<typename idk>
 void WritePacketBuffer(std::vector<uint8_t>& buff, const idk& value); 
+
+size_t CopyBuffer(std::vector<uint8_t> &destBuff, std::vector<uint8_t> &srcBuff);
+
+std::vector<uint8_t> CreateFileBuffer(Packet &data, size_t byteIndex);
 
 /*For normal packets*/
     /*Serialize*/

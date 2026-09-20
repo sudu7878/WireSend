@@ -33,9 +33,9 @@ struct PendingOutgoingFileRequest{
 
 FileMetadata CreateFileMetadata(std::string &filepath);
 
+
 bool NegotiateReceiver(int fd, FileMetadata &metadata);
 bool AnswerSender(int fd, bool response);
-
 
 int SendFile(int fd, FileMetadata meta,PendingOutgoingFileRequest &OutgoingFile);
 int RecvFile(int fd, FileMetadata meta, PendingIncomingFileRequest &IncomingFile);
