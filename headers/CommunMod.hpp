@@ -77,10 +77,6 @@ enum ControlType{
 template<typename idk>
 void WritePacketBuffer(std::vector<uint8_t>& buff, const idk& value); 
 
-size_t CopyBuffer(std::vector<uint8_t> &destBuff, std::vector<uint8_t> &srcBuff);
-
-std::vector<uint8_t> CreateFileBuffer(Packet &data, size_t byteIndex);
-
 /*For normal packets*/
     /*Serialize*/
 std::vector<uint8_t> SerializePacket(Packet &data);   
