@@ -186,8 +186,16 @@ int RunRecvThread(ClientInstance& client){
                 FileRecvInProgress = true;
 
                 while(FileRecvInProgress){
-                    
+                    int RecvFileFlag = RecvFile(client.GetFd(), IncomingFileRequestClient);
+
+                    if(RecvFileFlag < 0){
+                        printf("[ERROR]: RecvFile() FAILED. U shud lowkey dance now.\n");
+                    }
                 }
+
+                FileRecvInProgress = false;
+
+                    if(EnableDebug){printf("[dbg] RunRcvThread receieved the file, resuming to normal oprations now.\n");}
                 
 
         } 

@@ -233,7 +233,7 @@ int SendFile(PendingOutgoingFileRequest &OutgoingFile, FileMetadata meta, int fd
 }
 
 //only to be called in recv thread.
-int RecvFile(Packet ReceievedFilePacket, FileMetadata meta,PendingIncomingFileRequest &IncomingFile){
+int RecvFile(Packet ReceievedFilePacket, PendingIncomingFileRequest &IncomingFile){
     
             if(EnableDebug){printf("[dbg] Received command to recv files.\n");}
 
@@ -241,7 +241,7 @@ int RecvFile(Packet ReceievedFilePacket, FileMetadata meta,PendingIncomingFileRe
 
             if(EnableDebug){printf("Detected file begining packet.\n");}
 
-        if(CanReceiveFiles(IncomingFile, meta)){
+        if(CanReceiveFiles(IncomingFile, IncomingFile.metadata)){
 
                 if(EnableDebug){dbgPrintRecvFileInfo(IncomingFile);}
 
