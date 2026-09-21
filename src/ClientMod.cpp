@@ -8,6 +8,8 @@
 #include "FileHandler.hpp"
 #include "tinyfiledialogs.hpp"
 #include "CmdHandler.hpp"
+#include "Protocol.hpp"
+#include "FileTypes.hpp"
 
 #include <functional>
 #include <string>
@@ -27,7 +29,8 @@
 bool ClientConnected = false;
 PendingIncomingFileRequest IncomingFileRequestClient;
 PendingOutgoingFileRequest OutgoingFileRequestClient;
-bool FileRecvInProgress = false;
+bool FileRecvInProgressClient = false;
+bool FileSendInProgressClient = false;
 
 /*CLIENT CLASS FUNCTIONS*/
 
@@ -149,7 +152,9 @@ int RunRecvThread(ClientInstance& client){
         } else if (MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_CTL == FILE_ACCEPT && ActiveFileNegReq == true){
                     if(EnableDebug){printf("[dbg] User ACCEPTED the incoming file request.\n");}
                 ActiveFileNegReq = false;
+                FileSendInProgressClient = true;
                 printf("[INFO] The peer accepted to receive file(s).\n");
+
             //TODO implement the actual transfer
         } else if(MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_CTL == FILE_REJECT && ActiveFileNegReq == true){
                     if(EnableDebug){printf("[dbg] User rejected the incoming file request.\n");}
@@ -177,26 +182,23 @@ int RunRecvThread(ClientInstance& client){
                     //TODO: add a deleting the half-transferred filed logic here (add a file-transfer detection logic 1st)
         
         }
-        //TODO: add support for the file receving stuff by MessagePacket.PL_TYPE = FILE_TRANSFER
 
         if ((MessagePacket.PL_TYPE == FILE_TRANSFER || MessagePacket.PL_TYPE == FILE_BEGIN || MessagePacket.PL_TYPE == FILE_CHUNK || MessagePacket.PL_TYPE == FILE_END)  
             && IncomingFileRequestClient.active == true){
                 
                 if(EnableDebug){printf("[dbg] Detected a file incoming.\n");}
-                FileRecvInProgress = true;
+                FileRecvInProgressClient = true;
 
-                while(FileRecvInProgress){
-                    int RecvFileFlag = RecvFile(client.GetFd(), IncomingFileRequestClient);
+                while(FileRecvInProgressClient){
+                    int RecvFileFlag = RecvFile(MessagePacket, IncomingFileRequestClient);
 
                     if(RecvFileFlag < 0){
                         printf("[ERROR]: RecvFile() FAILED. U shud lowkey dance now.\n");
+                        break;
                     }
                 }
 
-                FileRecvInProgress = false;
-
-                    if(EnableDebug){printf("[dbg] RunRcvThread receieved the file, resuming to normal oprations now.\n");}
-                
+                FileRecvInProgressClient = false;
 
         } 
     }   
@@ -321,6 +323,16 @@ int StartClient(const char* ip, uint16_t port){
 
         /*SENDING PACKET LOGIC*/
 
+        while(FileSendInProgressClient){
+            int SendFileFlag = SendFile(NewClient.GetFd(), OutgoingFileRequestClient);
+            if(SendFileFlag < 0){
+                printf("[ERROR]: Unable to send file.\n");
+                break;
+            }
+        }
+
+        FileSendInProgressClient = false;
+
         std::vector<uint8_t> MessageBuffer = SerializePacket(MessagePacket);
             //if(EnableDebug){printf("[dbg] Made the packet ready for sending... calling send() now.\n");}
 
@@ -329,7 +341,7 @@ int StartClient(const char* ip, uint16_t port){
         if(SendFlag == 0){
                 if(EnableDebug){printf(" [dbg] The packet send was successful.\n");}
         } else if (SendFlag < 0){
-            printf("Sending packet failed. Terminating the cinnection\n");
+            printf("Sending packet failed. Terminating the connection\n");
             break;
         };
         

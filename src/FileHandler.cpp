@@ -1,12 +1,7 @@
 /*FileName: FileHandler.cpp*/
 
-#include "CommunMod.hpp"
-#include "api.hpp"
 
-#include <cstddef>
 #include <cstdint>
-
-
 #include <filesystem>
 #include <fstream>
 #include <ios>
@@ -19,6 +14,8 @@
 
 #include "CommunMod.hpp"
 #include "FileHandler.hpp"
+#include "api.hpp"
+#include "CommunMod.hpp"
 #include "api.hpp"
 
 namespace fs = std::filesystem;
@@ -167,9 +164,9 @@ bool CanSendFiles(PendingOutgoingFileRequest &OutgoingFile, FileMetadata meta){
 }
 
 //verrsion 1 with no redundency, no checksum calculation, just a simple implementation
-int SendFile(PendingOutgoingFileRequest &OutgoingFile, FileMetadata meta, int fd){
+int SendFile(int fd, PendingOutgoingFileRequest &OutgoingFile){
         if(EnableDebug){printf("[dbg] Received command to send files.\n");}
-    if(CanSendFiles(OutgoingFile, meta)){
+    if(CanSendFiles(OutgoingFile, OutgoingFile.metadata)){
             if(EnableDebug){dbgPrintSendFileInfo(OutgoingFile);}
 
         std::ifstream file(OutgoingFile.FilePathOnSrc, std::ios::binary);
@@ -271,7 +268,7 @@ int RecvFile(Packet ReceievedFilePacket, PendingIncomingFileRequest &IncomingFil
         printf("[INFO]: File recieved.\n");
             if(EnableDebug){printf("[dbg]: File has been receieved.\n");}
 
-            //TODO: TO actually close the file here ideally. V0 for now.
+            //TODO: TO actually close the file here ideally. V0 for now. hehehehe
     }
 
     return 0;

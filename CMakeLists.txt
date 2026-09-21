@@ -17,4 +17,5 @@ add_executable(wires
     src/UserHandler.cpp
     src/FileHandler.cpp
     src/tinyfiledialogs.cpp
+    headers/protocol.hpp
 )

@@ -7,6 +7,8 @@
 #include "api.hpp"
 #include "tinyfiledialogs.hpp"
 #include "CmdHandler.hpp"
+#include "Protocol.hpp"
+#include "FileTypes.hpp"
 
 #include <cerrno>
 #include <cstddef>
@@ -28,6 +30,8 @@ int CommunicationSocketFd = 0;
 bool ServerConnected = false;
 PendingIncomingFileRequest IncomingFileRequest;
 PendingOutgoingFileRequest OutgoingFileRequest;
+bool FileRecvInProgressServer = false;
+bool FileSendInProgressServer = false;
 
 /*SERVER CLASS FUNCTIONS*/
 
@@ -193,13 +197,31 @@ int RunRecvThread(ServerInstance& server){
                 if(EnableDebug){printf("[dbg] User ACCEPTED the incoming file request.\n");}
                 ActiveFileNegReq = false;
                 printf("[INFO] The peer accepted to receive file(s).\n");
-            //TODO: implement the actual file transfer by sending outgoing packet struct to the sender.
         } else if (MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_CTL == FILE_REJECT && ActiveFileNegReq == true){
                 if(EnableDebug){printf("[dbg] User rejected the incoming file request.\n");}
             ActiveFileNegReq = false;
             IncomingFileRequest.active = false;
             printf("[INFO] The peer rejected to receive file(s).\n");
-        }
+        } else if ((MessagePacket.PL_TYPE == FILE_TRANSFER || MessagePacket.PL_TYPE == FILE_BEGIN || MessagePacket.PL_TYPE == FILE_CHUNK || MessagePacket.PL_TYPE == FILE_END)  
+            && IncomingFileRequest.active == true){
+                
+                if(EnableDebug){printf("[dbg] Detected a file incoming.\n");}
+                FileRecvInProgressServer = true;
+
+                while(FileRecvInProgressServer){
+                    int RecvFileFlag = RecvFile(MessagePacket, IncomingFileRequest);
+
+                    if(RecvFileFlag < 0){
+                        printf("[ERROR]: RecvFile() FAILED. U shud lowkey dance now.\n");
+                        break;
+                    }
+                }
+
+                FileRecvInProgressServer = false;
+
+        } 
+
+        
 
         switch (MessagePacket.PL_CTL) {
             case NO_ARG:
@@ -362,6 +384,15 @@ int StartServer(uint16_t port){
             }
 
             /*SENDING PACKET LOGIC*/
+            while(FileSendInProgressServer){
+            int SendFileFlag = SendFile(CommunicationSocketFd, OutgoingFileRequest);
+                if(SendFileFlag < 0){
+                    printf("[ERROR]: Unable to send file.\n");
+                    break;
+                }
+            }
+
+            FileSendInProgressServer = false;
           
            std::vector<uint8_t> MessageBuffer = SerializePacket(MessagePacket);
                 //if(EnableDebug){printf("[dbg] Made the packet ready for sending... calling send() now.\n");}

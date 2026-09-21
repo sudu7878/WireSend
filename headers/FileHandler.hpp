@@ -7,29 +7,9 @@
 
 #include <cstdint>
 #include <string>
+#include "Protocol.hpp"
+#include "FileTypes.hpp"
 
-
-/*note: the variables are named in third person view: "OnTarget" means the peer receiving the file, "OnSrc means the one
-sending the file."*/
-
-//there is no seperate packet consturction for ts. i stuff it all into PL_BODY hehehaha
-struct FileMetadata{
-    uint64_t FileSize;      /*8 BYTES*/
-    std::string FileName;   /*dynamic*/
-};
-
-struct PendingIncomingFileRequest{
-    bool active;
-    bool Overwrite;
-    std::string FilePathOnTarget;
-    FileMetadata metadata;
-};  //for the receiving side
-
-struct PendingOutgoingFileRequest{
-    bool active = false;
-    std::string FilePathOnSrc;
-    FileMetadata metadata;
-};  //for the sending side
 
 FileMetadata CreateFileMetadata(std::string &filepath);
 
@@ -37,8 +17,8 @@ FileMetadata CreateFileMetadata(std::string &filepath);
 bool NegotiateReceiver(int fd, FileMetadata &metadata);
 bool AnswerSender(int fd, bool response);
 
-int SendFile(int fd, FileMetadata meta, PendingOutgoingFileRequest &OutgoingFile);
-int RecvFile(int fd, PendingIncomingFileRequest &IncomingFile);
+int SendFile(int fd, PendingOutgoingFileRequest &OutgoingFile);
+int RecvFile(Packet ReceievedFilePacket, PendingIncomingFileRequest &IncomingFile);
 
 constexpr uint32_t DEFAULT_FILE_CHUNK_SIZE = 64 * 1024; //64kb?
 
