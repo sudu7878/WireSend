@@ -30,10 +30,10 @@ make all
 
 ## Usage
 
-### Start a server
+### Start a server and choose a port
 
 ```bash
-./wires server
+./wires server <port>
 ```
 
 ### Connect as a client
@@ -51,6 +51,6 @@ Replace `<ip-address>` and `<port>` with the values shown when the server starts
 Add the `-dbg` flag to enable debugging mode:
 
 ```bash
-./wires server -dbg
+./wires server <port> -dbg
 ./wires <ip-address> <port> -dbg
 ```
