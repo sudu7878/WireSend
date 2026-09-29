@@ -197,6 +197,7 @@ int RunRecvThread(ServerInstance& server){
         } else if (MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_CTL == FILE_ACCEPT && ActiveFileNegReq == true){
                 if(EnableDebug){printf("[dbg] User ACCEPTED the incoming file request.\n");}
             ActiveFileNegReq = false;
+            FileSendInProgressServer = true;
             printf("[INFO] The peer accepted to receive file(s).\n");
 
         /*FILE REJECT CASE*/
@@ -335,8 +336,6 @@ int StartServer(uint16_t port){
                             IncomingFileRequest.FilePathOnTarget = DestinationPath; //set up where to save
                             printf("[INFO] Saving to: %s.\n", IncomingFileRequest.FilePathOnTarget.c_str());
                             AnswerSender(CommunicationSocketFd, true);
-                            
-                            printf("[ACTION REQUIRED]: Send anything to start sending. This is the final confirmation.\n");
                             /*
                                 IncomingFileRequest.active = false. // set this when we are done with the transfer or cancel it
                             */
