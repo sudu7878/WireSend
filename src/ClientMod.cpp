@@ -149,18 +149,35 @@ int RunRecvThread(ClientInstance& client){
 
         /*for the case where we are the "askers" and we expect a RESPONSE from the peer.*/
 
+        /*FILE ACCEPT CASE*/
         } else if (MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_CTL == FILE_ACCEPT && ActiveFileNegReq == true){
                     if(EnableDebug){printf("[dbg] User ACCEPTED the incoming file request.\n");}
                 ActiveFileNegReq = false;
                 FileSendInProgressClient = true;
                 printf("[INFO] The peer accepted to receive file(s).\n");
 
-            //TODO implement the actual transfer
+        /*FILE REJECT CASE*/
         } else if(MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_CTL == FILE_REJECT && ActiveFileNegReq == true){
                     if(EnableDebug){printf("[dbg] User rejected the incoming file request.\n");}
                 ActiveFileNegReq = false;
                 IncomingFileRequestClient.active = false;
                 printf("[INFO] The peer rejected to receive file(s).'\n");
+
+        /*FILE TRANSFER CASE*/
+        } else if(MessagePacket.PL_TYPE == FILE_TRANSFER || MessagePacket.PL_TYPE == FILE_CHUNK || MessagePacket.PL_TYPE == FILE_END || MessagePacket.PL_TYPE == FILE_BEGIN){
+                    if(EnableDebug){printf("[dbg] Detected a file incoming.\n");}
+            FileRecvInProgressClient = true;
+
+            if (FileRecvInProgressClient == true){
+                int RecvFileFlag = RecvFile(MessagePacket, IncomingFileRequestClient);
+
+                if(RecvFileFlag < 0){
+                    printf("[ERROR]: RecvFile() FAILED. Bruh.\n");
+                }
+            }
+
+            FileRecvInProgressClient = false;
+
         }
 
 
@@ -182,25 +199,6 @@ int RunRecvThread(ClientInstance& client){
                     //TODO: add a deleting the half-transferred filed logic here (add a file-transfer detection logic 1st)
         
         }
-
-        if ((MessagePacket.PL_TYPE == FILE_TRANSFER || MessagePacket.PL_TYPE == FILE_BEGIN || MessagePacket.PL_TYPE == FILE_CHUNK || MessagePacket.PL_TYPE == FILE_END)  
-            && IncomingFileRequestClient.active == true){
-                
-                if(EnableDebug){printf("[dbg] Detected a file incoming.\n");}
-                FileRecvInProgressClient = true;
-
-                while(FileRecvInProgressClient){
-                    int RecvFileFlag = RecvFile(MessagePacket, IncomingFileRequestClient);
-
-                    if(RecvFileFlag < 0){
-                        printf("[ERROR]: RecvFile() FAILED. U shud lowkey dance now.\n");
-                        break;
-                    }
-                }
-
-                FileRecvInProgressClient = false;
-
-        } 
     }   
     return 0;
 }
@@ -270,6 +268,7 @@ int StartClient(const char* ip, uint16_t port){
                         IncomingFileRequestClient.FilePathOnTarget = DestinationPath;   //set up where to save
                         printf("[INFO] Saving to: %s.\n", IncomingFileRequestClient.FilePathOnTarget.c_str());
                         AnswerSender(NewClient.GetFd(), true);
+                        printf("[ACTION REQUIRED]: Send anything to start sending. This is the final confirmation.\n");
                         /*
                         TODO: set this when we are done with the transfer or cancel it
                         IncomingFileRequestClient.active = false;*/
@@ -323,15 +322,18 @@ int StartClient(const char* ip, uint16_t port){
 
         /*SENDING PACKET LOGIC*/
 
-        while(FileSendInProgressClient){
+        if(FileSendInProgressClient == true){
+                if(EnableDebug){printf("[dbg] Sending file.\n");}
             int SendFileFlag = SendFile(NewClient.GetFd(), OutgoingFileRequestClient);
             if(SendFileFlag < 0){
                 printf("[ERROR]: Unable to send file.\n");
-                break;
             }
+            FileSendInProgressClient = false;
+            printf("[INFO]: Sent the file.\n");
+
         }
 
-        FileSendInProgressClient = false;
+        
 
         std::vector<uint8_t> MessageBuffer = SerializePacket(MessagePacket);
             //if(EnableDebug){printf("[dbg] Made the packet ready for sending... calling send() now.\n");}

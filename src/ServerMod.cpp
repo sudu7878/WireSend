@@ -193,35 +193,37 @@ int RunRecvThread(ServerInstance& server){
         
         /*for the case where we are the "askers" and we expect a RESPONSE from the peer.*/
 
+        /*FILE ACCEPT CASE*/
         } else if (MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_CTL == FILE_ACCEPT && ActiveFileNegReq == true){
                 if(EnableDebug){printf("[dbg] User ACCEPTED the incoming file request.\n");}
-                ActiveFileNegReq = false;
-                printf("[INFO] The peer accepted to receive file(s).\n");
+            ActiveFileNegReq = false;
+            printf("[INFO] The peer accepted to receive file(s).\n");
+
+        /*FILE REJECT CASE*/
         } else if (MessagePacket.PL_TYPE == FILE_NEG && MessagePacket.PL_CTL == FILE_REJECT && ActiveFileNegReq == true){
                 if(EnableDebug){printf("[dbg] User rejected the incoming file request.\n");}
             ActiveFileNegReq = false;
             IncomingFileRequest.active = false;
             printf("[INFO] The peer rejected to receive file(s).\n");
+
+        /*FILE TRANSFER CASE*/
         } else if ((MessagePacket.PL_TYPE == FILE_TRANSFER || MessagePacket.PL_TYPE == FILE_BEGIN || MessagePacket.PL_TYPE == FILE_CHUNK || MessagePacket.PL_TYPE == FILE_END)  
             && IncomingFileRequest.active == true){
                 
                 if(EnableDebug){printf("[dbg] Detected a file incoming.\n");}
-                FileRecvInProgressServer = true;
+            FileRecvInProgressServer = true;
 
-                while(FileRecvInProgressServer){
-                    int RecvFileFlag = RecvFile(MessagePacket, IncomingFileRequest);
+            if(FileRecvInProgressServer == true){
+                int RecvFileFlag = RecvFile(MessagePacket, IncomingFileRequest);
 
-                    if(RecvFileFlag < 0){
-                        printf("[ERROR]: RecvFile() FAILED. U shud lowkey dance now.\n");
-                        break;
-                    }
+                if(RecvFileFlag < 0){
+                    printf("[ERROR]: RecvFile() FAILED. U shud lowkey dance now.\n");
                 }
 
                 FileRecvInProgressServer = false;
 
+            }
         } 
-
-        
 
         switch (MessagePacket.PL_CTL) {
             case NO_ARG:
@@ -333,7 +335,8 @@ int StartServer(uint16_t port){
                             IncomingFileRequest.FilePathOnTarget = DestinationPath; //set up where to save
                             printf("[INFO] Saving to: %s.\n", IncomingFileRequest.FilePathOnTarget.c_str());
                             AnswerSender(CommunicationSocketFd, true);
-
+                            
+                            printf("[ACTION REQUIRED]: Send anything to start sending. This is the final confirmation.\n");
                             /*
                                 IncomingFileRequest.active = false. // set this when we are done with the transfer or cancel it
                             */
@@ -384,15 +387,16 @@ int StartServer(uint16_t port){
             }
 
             /*SENDING PACKET LOGIC*/
-            while(FileSendInProgressServer){
-            int SendFileFlag = SendFile(CommunicationSocketFd, OutgoingFileRequest);
+            if(FileSendInProgressServer ==true){
+                    if(EnableDebug){printf("[dbg] Sending file.\n");}
+                int SendFileFlag = SendFile(CommunicationSocketFd, OutgoingFileRequest);
                 if(SendFileFlag < 0){
                     printf("[ERROR]: Unable to send file.\n");
-                    break;
+                
                 }
+                FileSendInProgressServer = false;
             }
 
-            FileSendInProgressServer = false;
           
            std::vector<uint8_t> MessageBuffer = SerializePacket(MessagePacket);
                 //if(EnableDebug){printf("[dbg] Made the packet ready for sending... calling send() now.\n");}
