@@ -268,7 +268,6 @@ int StartClient(const char* ip, uint16_t port){
                         IncomingFileRequestClient.FilePathOnTarget = DestinationPath;   //set up where to save
                         printf("[INFO] Saving to: %s.\n", IncomingFileRequestClient.FilePathOnTarget.c_str());
                         AnswerSender(NewClient.GetFd(), true);
-                        printf("[ACTION REQUIRED]: Send anything to start sending. This is the final confirmation.\n");
                         /*
                         TODO: set this when we are done with the transfer or cancel it
                         IncomingFileRequestClient.active = false;*/

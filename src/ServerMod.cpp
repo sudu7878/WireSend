@@ -394,6 +394,7 @@ int StartServer(uint16_t port){
                 
                 }
                 FileSendInProgressServer = false;
+                printf("[INFO]: Sent the file.\n");
             }
 
           
