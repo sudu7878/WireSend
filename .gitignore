@@ -4,8 +4,11 @@ compile_commands.json
 ftp
 wires
 builds/
-*.o
+build/
+
 
 *.temp
 .gitignore
 .cache
+.Makefile
+wires

@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include <string>
 #include <sys/errno.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -15,14 +16,16 @@
 #include <cstdlib>
 #include <ifaddrs.h>
 #include <vector>
+#include <iostream>
 
 
 #include "api.hpp"
-#include "CommunMod.hpp"
 
 bool EnableDebug = false;
 bool RunningMode;
 volatile bool ProgramRunning = true;
+bool ActiveFileNegReq = false;
+bool FileTransferMode = false;
 
 void HandleExit(){
     ProgramRunning = false;
@@ -63,6 +66,36 @@ void PrintServerInfo(uint16_t port){
     printf("Local IP: 127.0.0.1:%d\n", port);
     printf("LAN IP: %s:%d\n", GetLANIPAddr(), port);
     printf("===========================\n\n");
+}
+
+void PrintIncomingFileInfo(uint64_t FileSize, std::string FileName){
+    printf("\n========NEW FILE TRANSFER REQUEST========\n");
+    printf("    You have a new file transfer request\n");
+    printf("        File name: %s\n", FileName.c_str());
+    printf("        File size: %lu\n", FileSize);
+    printf("       Would you like to accept?\n");
+    printf("==========================================\n\n");
+    printf("'/a' or '/r' to accept/reject respectively.\n");
+}
+
+//TODO: change the implementation later so that it doesnt hang the parent thread until the user answers something.
+bool UserAction(void){
+    if(std::cin.peek() == '\n'){
+        std::cin.ignore();
+    }
+    while(true){
+        printf("\nEnter 'Y' for YES and 'N' for NO.\n");
+        std::string UserInput;
+        std::getline(std::cin, UserInput);
+        if(UserInput == "Y" || UserInput == "y"){
+            return true;
+        } else if (UserInput == "N" || UserInput == "n"){
+            return false;
+        }    
+        else {
+            printf("[INVALID USER ACTION] Please select an input from the choice.\n");
+        }   
+    }
 }
 
 /*BASE CLASS FUNCTIONS*/
@@ -138,3 +171,4 @@ int SendPacket(std::vector<uint8_t> &msgbuff, int fd){
     }
     return 0;
 };
+
