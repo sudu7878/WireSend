@@ -39,8 +39,6 @@ bool FileSendInProgressServer = false;
 
 ServerInstance::ServerInstance(uint16_t port):serv_port(port){}
 
-ServerInstance::ServerInstance(uint16_t port):serv_port(port){}
-
 int ServerInstance::GetPort(){
     return serv_port;
 }
@@ -407,6 +405,13 @@ int StartServer(uint16_t port){
 
 
             int SendFlag =  SendPacket(MessageBuffer, CommunicationSocketFd);
+
+                if(EnableDebug){
+                    printf("[dbg] [TX]: type = %u, ctl = %u, size = %zu.\n", 
+                    static_cast<int>(MessagePacket.PL_TYPE),
+                    static_cast<int>(MessagePacket.PL_CTL),
+                    MessagePacket.PL_BODY.size());
+                }
             
             if(SendFlag == 0){
                     if(EnableDebug){printf("[dbg] Packet sending successful.\n");}

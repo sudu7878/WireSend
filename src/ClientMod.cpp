@@ -349,6 +349,13 @@ int StartClient(const char* ip, uint16_t port){
             //if(EnableDebug){printf("[dbg] Made the packet ready for sending... calling send() now.\n");}
 
         int SendFlag = SendPacket(MessageBuffer, NewClient.GetFd());
+
+            if(EnableDebug){
+                printf("[dbg] [TX]: type = %u, ctl = %u, size = %zu.\n", 
+                static_cast<int>(MessagePacket.PL_TYPE),
+                static_cast<int>(MessagePacket.PL_CTL),
+                MessagePacket.PL_BODY.size());
+            }
         
         if(SendFlag == 0){
                 if(EnableDebug){printf(" [dbg] The packet send was successful.\n");}
