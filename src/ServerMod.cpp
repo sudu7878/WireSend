@@ -39,6 +39,8 @@ bool FileSendInProgressServer = false;
 
 ServerInstance::ServerInstance(uint16_t port):serv_port(port){}
 
+ServerInstance::ServerInstance(uint16_t port):serv_port(port){}
+
 int ServerInstance::GetPort(){
     return serv_port;
 }
