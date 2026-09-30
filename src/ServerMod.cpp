@@ -1,15 +1,5 @@
 /*FileName: ServerMod.cpp*/
 
-#include "ServerMod.hpp"
-#include "CommunMod.hpp"
-#include "FileHandler.hpp"
-#include "UserHandler.hpp"
-#include "api.hpp"
-#include "tinyfiledialogs.hpp"
-#include "CmdHandler.hpp"
-#include "Protocol.hpp"
-#include "FileTypes.hpp"
-
 #include <cerrno>
 #include <cstddef>
 #include <cstdint>
@@ -25,6 +15,18 @@
 #include <vector>
 #include <iostream>
 #include <thread>
+
+#include "ServerMod.hpp"
+#include "CommunMod.hpp"
+#include "FileHandler.hpp"
+#include "UserHandler.hpp"
+#include "api.hpp"
+#include "tinyfiledialogs.hpp"
+#include "CmdHandler.hpp"
+#include "Protocol.hpp"
+#include "FileTypes.hpp"
+#include "EnumStates.hpp"
+
 
 int CommunicationSocketFd = 0;
 bool ServerConnected = false;

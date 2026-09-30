@@ -1,16 +1,5 @@
 /*FileName: ClientMod.cpp*/
 
-#include "ClientMod.hpp"
-#include "CommunMod.hpp"
-#include "UserHandler.hpp"
-#include "api.hpp"
-#include "CommunMod.hpp"
-#include "FileHandler.hpp"
-#include "tinyfiledialogs.hpp"
-#include "CmdHandler.hpp"
-#include "Protocol.hpp"
-#include "FileTypes.hpp"
-
 #include <functional>
 #include <string>
 #include<thread>
@@ -24,6 +13,19 @@
 #include <sys/socket.h>
 #include <unistd.h> 
 #include <vector>
+
+
+#include "ClientMod.hpp"
+#include "CommunMod.hpp"
+#include "UserHandler.hpp"
+#include "api.hpp"
+#include "CommunMod.hpp"
+#include "FileHandler.hpp"
+#include "tinyfiledialogs.hpp"
+#include "CmdHandler.hpp"
+#include "Protocol.hpp"
+#include "FileTypes.hpp"
+#include "EnumStates.hpp"
 
 
 bool ClientConnected = false;
@@ -127,7 +129,16 @@ int RunRecvThread(ClientInstance& client){
         BodyPacket = DeserializeBodyPacket(RecvMsgBodyBuff, HeaderPacket);
 
         /*Combining the header + body packet to form message packet*/
+
         MessagePacket = CombinePacket(HeaderPacket, BodyPacket);    //recieving complete
+
+        if(EnableDebug){
+                printf("[dbg] [RX]: Type %u, ctl = %u, body_size = %zu\n",
+                static_cast<unsigned>(MessagePacket.PL_TYPE),
+                static_cast<unsigned>(MessagePacket.PL_CTL),
+                MessagePacket.PL_BODY.size());
+        }
+
 
     /*PACKET PASRSING LOGIC*/
 

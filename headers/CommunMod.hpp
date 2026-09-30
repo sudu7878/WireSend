@@ -9,6 +9,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "Protocol.hpp"
+#include "FileTypes.hpp"
+
+
+#include <stdbool.h>
+#include <stdint.h>
+
 #include <sys/errno.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -17,9 +24,6 @@
 #include <netdb.h>
 #include <vector>
 #include <ifaddrs.h>
-
-
-#include "FileTypes.hpp"
 
 
 /*Never forget to tell this function which endiannes to use or the world is over.*/

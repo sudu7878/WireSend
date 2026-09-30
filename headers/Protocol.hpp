@@ -35,11 +35,5 @@ struct TemporaryPacketBody{
     uint8_t ctl;
 };
 
-enum PacketType{
-    MESSAGE,
-    MESSAGE_BROADCAST,
-    FILE_TRANSFER,
-    FILE_NEG,
-};
 
 #endif

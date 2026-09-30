@@ -17,6 +17,8 @@
 #include "api.hpp"
 #include "CommunMod.hpp"
 #include "api.hpp"
+#include "Protocol.hpp"
+#include "EnumStates.hpp"
 
 namespace fs = std::filesystem;
 
@@ -200,6 +202,12 @@ int SendFile(int fd, PendingOutgoingFileRequest &OutgoingFile){
             ChunkPacket.PL_TYPE = FILE_CHUNK;
             ChunkPacket.PL_CTL = NO_ARG;
             ChunkPacket.PL_BODY = SerializeFileChunk(chunk);
+
+                if(EnableDebug){
+                    printf("[dbg] [TX FILE] Type = %u, body_size = %zu\n",
+                    static_cast<unsigned>(ChunkPacket.PL_TYPE), 
+                    ChunkPacket.PL_BODY.size());
+                }
 
             auto mainBuff = SerializePacket(ChunkPacket);
             int SendStatus = SendPacket(mainBuff, fd);

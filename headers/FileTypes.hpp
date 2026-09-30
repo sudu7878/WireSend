@@ -17,26 +17,6 @@ struct FileChunk{
     std::vector<uint8_t> data;
 };
 
-enum FileTransferBody{
-    FILE_BEGIN,
-    FILE_CHUNK,
-    FILE_END,
-};
-
-enum Flags{
-    FILE_SUCC,
-    FILE_FAIL,
-    FILE_READY,
-};
-
-enum ControlType{
-    NO_ARG,
-    FILE_ACCEPT,
-    FILE_REJECT,
-    CANCEL_TRANS,
-    END_CONNECTION
-};
-
 /*note: the variables are named in third person view: "OnTarget" means the peer receiving the file, "OnSrc means the one
 sending the file."*/
 
